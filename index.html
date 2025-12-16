@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestri di Luce | Atelier del Prompt AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media', 
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b',
+                        brand: '#2563eb'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .serif { font-family: 'Playfair Display', serif; }
+        
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        
+        /* UI Polish */
+        .btn-hover { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-hover:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        /* Active States */
+        .ar-btn.selected, .tone-btn.selected {
+            background-color: #111827; color: white; border-color: #111827;
+        }
+        @media (prefers-color-scheme: dark) {
+            .ar-btn.selected, .tone-btn.selected {
+                background-color: #3b82f6; color: white; border-color: #3b82f6;
+            }
+        }
+        
+        /* Photographer List Item */
+        .photographer-btn {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .photographer-btn:hover {
+            background-color: #f9fafb;
+        }
+        .photographer-btn.selected {
+            background-color: #f3f4f6; 
+            border-left-color: #111827;
+            padding-left: 1rem; /* Subtle shift */
+        }
+        
+        /* Dark Mode List Item */
+        @media (prefers-color-scheme: dark) {
+            .photographer-btn:hover { background-color: #1e293b; }
+            .photographer-btn.selected {
+                background-color: #1e293b; 
+                border-left-color: #60a5fa;
+            }
+        }
+
+        /* Loaders & Scrollbars */
+        .loader {
+            border: 2px solid #e5e7eb; border-top: 2px solid #3b82f6; border-radius: 50%;
+            width: 14px; height: 14px; animation: spin 1s linear infinite; display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* Modal & Preview */
+        .modal { transition: opacity 0.2s ease, visibility 0.2s; opacity: 0; visibility: hidden; }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.95); transition: transform 0.2s ease; }
+        .modal.active .modal-content { transform: scale(1); }
+        
+        #ratio-preview-box { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .style-preview { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-white text-slate-900 dark:bg-darkbg dark:text-slate-100 transition-colors duration-300">
+
+    <!-- Navbar -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 dark:bg-darkbg/90 dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Branding -->
+                <div class="flex items-center gap-1.5">
+                    <span class="text-lg font-bold serif tracking-tight">Atelier del Prompt <span class="text-blue-600 text-xs align-top font-sans font-bold">AI</span></span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-8">
+                    <button onclick="scrollToSection('gallery')" class="text-sm font-medium text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors">I Maestri</button>
+                    <button onclick="scrollToSection('builder')" class="text-sm font-medium text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors">Costruttore</button>
+                    <button onclick="openSettings()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all" title="Impostazioni">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center gap-4">
+                    <button onclick="openSettings()" class="text-gray-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button id="mobile-menu-btn" class="text-gray-600 dark:text-white focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-gray-200 dark:bg-darkbg dark:border-gray-800">
+            <div class="px-4 pt-2 pb-4 space-y-2">
+                <button onclick="scrollToSection('gallery')" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded px-2">I Maestri</button>
+                <button onclick="scrollToSection('builder')" class="block w-full text-left py-2 font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 rounded px-2">Costruttore</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl p-6 w-full max-w-md modal-content border border-gray-100 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold serif dark:text-white">Motore AI</h3>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-black dark:hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Gemini API Key</label>
+                    <input type="password" id="api-key-input" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none dark:bg-gray-800 dark:text-white transition-all" placeholder="Incolla la tua chiave qui...">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Modello</label>
+                    <select id="model-select" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none transition-all">
+                        <option value="gemini-2.5-flash-preview-09-2025">Gemini 2.5 Flash (Consigliato)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </select>
+                </div>
+                <div class="flex justify-end pt-2">
+                    <button onclick="saveSettings()" class="bg-black dark:bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-blue-700 btn-hover w-full sm:w-auto">Salva</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Header -->
+    <header class="bg-gradient-to-b from-white to-gray-50 dark:from-darkbg dark:to-darkbg/95 py-20 transition-colors duration-300">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight serif tracking-tight">Maestri di Luce</h1>
+            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 font-light mb-8 max-w-2xl mx-auto">
+                Strumenti di emulazione fotografica ad alta fedeltà per il ragionamento visivo.
+            </p>
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Sistema Zonale & Ottiche Reali Attivi</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        
+        <!-- SECTION 1: THE GALLERY -->
+        <section id="gallery" class="py-16 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-darkbg transition-colors duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    <!-- Sidebar List -->
+                    <div class="lg:col-span-3">
+                        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">L'Archivio (16)</h3>
+                        <div id="photographer-list" class="space-y-2 h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-10">
+                            <!-- JS Generated -->
+                        </div>
+                    </div>
+
+                    <!-- Main Dashboard -->
+                    <div class="lg:col-span-9 bg-white dark:bg-darkcard rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 p-8 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-10 transition-colors duration-300">
+                        
+                        <!-- Radar Chart & Info -->
+                        <div class="flex flex-col justify-between h-full">
+                            <div>
+                                <h2 id="master-name" class="text-3xl md:text-4xl font-bold serif text-gray-900 dark:text-white mb-6">Seleziona Autore</h2>
+                                <!-- DESCRIPTION BOX -->
+                                <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 mb-8 border border-gray-100 dark:border-gray-700">
+                                    <p id="master-desc" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                        Scegli un fotografo dalla lista per caricare il suo profilo tecnico.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="chart-container mt-auto">
+                                <canvas id="styleRadarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Technical Specs Panel -->
+                        <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 flex flex-col justify-center space-y-8 transition-colors">
+                            <div class="space-y-5">
+                                <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700/50 pb-3">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Camera System</span>
+                                    <span id="spec-cam" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700/50 pb-3">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Emulsione</span>
+                                    <span id="spec-film" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700/50 pb-3">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Luce</span>
+                                    <span id="spec-light" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Focus</span>
+                                    <span id="spec-focus" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                                <p class="text-[10px] font-bold text-blue-500 uppercase mb-2">Negative Context (Auto)</p>
+                                <p id="spec-negative" class="text-xs text-blue-900 dark:text-blue-200 font-mono break-words leading-relaxed opacity-80">
+                                    -
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: PROMPT BUILDER -->
+        <section id="builder" class="py-16 bg-[#111111] text-gray-300 border-t border-gray-800 scroll-mt-0">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-gray-800 pb-8 gap-6">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-bold text-white serif mb-2">Camera Oscura AI</h2>
+                        <p class="text-sm text-gray-500">I parametri sono pre-configurati. Definisci il soggetto.</p>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row items-end md:items-center gap-4">
+                         <button onclick="resetBuilder()" class="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors px-3 py-2 rounded hover:bg-white/5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Nuovo Scatto
+                        </button>
+                        
+                        <div class="flex bg-gray-900 p-1.5 rounded-xl border border-gray-700">
+                            <button onclick="setTone('default')" id="btn-tone-default" class="tone-btn px-4 py-2 text-xs rounded-lg font-medium transition-all selected">Originale</button>
+                            <button onclick="setTone('bw')" id="btn-tone-bw" class="tone-btn px-4 py-2 text-xs rounded-lg font-medium transition-all hover:text-white">B&N</button>
+                            <button onclick="setTone('color')" id="btn-tone-color" class="tone-btn px-4 py-2 text-xs rounded-lg font-medium transition-all hover:text-white">Colore</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    
+                    <!-- INPUT COLUMN -->
+                    <div class="space-y-8">
+                        
+                        <!-- 1. Visualizer & Format -->
+                        <div class="bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Inquadratura</label>
+                                <span id="ar-label" class="text-xs font-mono text-cyan-400">1:1</span>
+                            </div>
+                            <div class="flex gap-6 items-center">
+                                <!-- AR Buttons -->
+                                <div class="grid grid-cols-4 gap-2 flex-grow">
+                                    <button onclick="setRatio('1:1')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">1:1</button>
+                                    <button onclick="setRatio('3:2')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">3:2</button>
+                                    <button onclick="setRatio('4:5')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">4:5</button>
+                                    <button onclick="setRatio('16:9')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">16:9</button>
+                                </div>
+                                <!-- Visual Preview -->
+                                <div class="flex items-center justify-center w-20 h-20 bg-black rounded-xl border border-gray-800 shrink-0">
+                                    <div id="ratio-preview-box" class="bg-gray-700 border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)]" style="width: 40px; height: 40px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Subject & Context (Italiano) -->
+                        <div class="space-y-5">
+                            <div class="relative">
+                                <div class="flex justify-between mb-1.5">
+                                    <label class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Soggetto</label>
+                                    <button onclick="generateIdea()" class="text-[10px] text-blue-400 hover:text-white flex items-center gap-1 transition-colors">
+                                        <span id="idea-icon">✨</span> Ispirami
+                                    </button>
+                                </div>
+                                <input type="text" id="input-subject" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Un pescatore anziano che ripara le reti...">
+                            </div>
+                            
+                            <!-- REFERENCE IMAGE / ACTION ROW -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1.5">Azione / Contesto</label>
+                                    <input type="text" id="input-action" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Al porto, nebbia...">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1.5">Immagine Riferimento</label>
+                                    <select id="ref-image-mode" onchange="toggleRefInput()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3.5 text-xs text-gray-300 outline-none focus:border-pink-500 transition-all">
+                                        <option value="none">Nessuna Immagine</option>
+                                        <option value="upload">Allegherò file (Drag & Drop)</option>
+                                        <option value="url">Ho un URL web</option>
+                                    </select>
+                                    <input type="text" id="ref-image-url" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 mt-2 text-xs text-white outline-none placeholder-gray-600 hidden transition-all" placeholder="Incolla qui il link https://...">
+                                </div>
+                            </div>
+                            
+                            <!-- COMPOSITION / FRAMING -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-cyan-500 uppercase tracking-wider mb-1.5">Angolazione & Distanza</label>
+                                <select id="select-framing" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3.5 text-xs text-gray-300 outline-none focus:border-cyan-500 transition-all">
+                                    <option value="">Default (Automatico in base allo stile)</option>
+                                    <optgroup label="Angolazione">
+                                        <option value="Eye-level shot">Ad altezza occhi (Neutro)</option>
+                                        <option value="Low angle shot, looking up">Dal basso (Eroico/Dominante)</option>
+                                        <option value="High angle shot, looking down">Dall'alto (Vulnerabile/Contesto)</option>
+                                        <option value="Overhead / Bird's eye view">A volo d'uccello (Zenitale)</option>
+                                        <option value="Dutch angle">Inclinato (Dinamico/Disorientante)</option>
+                                    </optgroup>
+                                    <optgroup label="Distanza">
+                                        <option value="Extreme close-up macro">Macro (Dettaglio estremo)</option>
+                                        <option value="Close-up portrait">Primo Piano (Volto)</option>
+                                        <option value="Medium shot">Campo Medio (Mezzo busto)</option>
+                                        <option value="Full body shot">Figura Intera</option>
+                                        <option value="Wide shot">Campo Lungo (Paesaggio)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 3. Technical Fine Tuning -->
+                        <div class="grid grid-cols-2 gap-5">
+                            <!-- Camera -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5">Ottica (Lens)</label>
+                                <select id="select-camera" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
+                                    <optgroup label="Reportage / Street">
+                                        <option value="Leica M3 with 35mm lens">35mm (Grandangolo)</option>
+                                        <option value="Leica M3 with 50mm lens">50mm (Occhio Umano)</option>
+                                        <option value="Telephoto lens (90mm or 135mm)">Teleobiettivo</option>
+                                    </optgroup>
+                                    <optgroup label="Ritratti / Moda">
+                                        <option value="85mm portrait lens, f/1.8">85mm (Ritratto)</option>
+                                        <option value="Hasselblad 500C">Medio Formato (Hasselblad)</option>
+                                        <option value="Rolleiflex medium format">Rolleiflex (Vintage)</option>
+                                    </optgroup>
+                                    <optgroup label="Epico / Cinema">
+                                        <option value="Wide angle lens 24mm">24mm (Epico)</option>
+                                        <option value="Large format camera, f/64">Grande Formato (View)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            
+                            <!-- Aperture Control (NEW) -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5">Profondità (Apertura)</label>
+                                <select id="select-aperture" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
+                                    <option value="">Default (Automatico)</option>
+                                    <option value="f/1.4">f/1.4 - Bokeh Estremo</option>
+                                    <option value="f/2.8">f/2.8 - Ritratto</option>
+                                    <option value="f/5.6">f/5.6 - Street</option>
+                                    <option value="f/11">f/11 - Nitido</option>
+                                    <option value="f/64">f/64 - Ansel Adams</option>
+                                </select>
+                            </div>
+
+                            <!-- Lighting -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-yellow-500 uppercase tracking-wider mb-1.5">Luce</label>
+                                <select id="select-light" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
+                                    <optgroup label="Luce Naturale (Orario)">
+                                        <option value="Soft overcast natural light">Diffusa / Nuvoloso</option>
+                                        <option value="Golden Hour side lighting">Golden Hour</option>
+                                        <option value="Blue Hour twilight">Blue Hour</option>
+                                        <option value="Harsh midday sun">Mezzogiorno</option>
+                                        <option value="Shafts of light (God rays)">Raggi di Luce</option>
+                                        <option value="Soft window light, rainy mood">Finestra / Pioggia</option>
+                                    </optgroup>
+                                    <optgroup label="Luce Artistica">
+                                        <option value="High contrast 'chiaroscuro'">Chiaroscuro</option>
+                                        <option value="Harsh, direct flash lighting">Flash Diretto</option>
+                                        <option value="Cinematic artificial lighting (tungsten)">Cinematografica</option>
+                                        <option value="Flat, even lighting (high key)">High Key</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- Film Stock -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1.5">Pellicola</label>
+                                <select id="select-film" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
+                                    <option value="">Default (Auto)</option>
+                                    <optgroup label="Colore">
+                                        <option value="Kodak Portra 400">Kodak Portra 400</option>
+                                        <option value="Kodachrome 64 film">Kodachrome 64</option>
+                                        <option value="Early Kodachrome (Muted/Warm)">Early Kodachrome</option>
+                                        <option value="Dye Transfer Print (Vivid Colors)">Dye Transfer</option>
+                                        <option value="Cinematic Color Grade">Cinematic Color</option>
+                                        <option value="Fujifilm Velvia 50">Velvia 50</option>
+                                        <option value="Muted, desaturated tones">Desaturato</option>
+                                    </optgroup>
+                                    <optgroup label="Bianco e Nero">
+                                        <option value="Tri-X 400 B&W film">Tri-X 400</option>
+                                        <option value="Ilford HP5 Plus">Ilford HP5</option>
+                                        <option value="High contrast black and white">B&W Alto Contrasto</option>
+                                        <option value="Classic B&W film (1930s)">B&W Vintage</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            
+                            <!-- Text Overlay -->
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold text-orange-500 uppercase tracking-wider mb-1.5">Testo Visibile (Opzionale)</label>
+                                <input type="text" id="input-text" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white outline-none placeholder-gray-600 transition-all" placeholder="Es. Insegna 'HOTEL'...">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- OUTPUT COLUMN -->
+                    <div class="flex flex-col h-full">
+                        <div class="bg-white dark:bg-darkcard rounded-3xl p-1.5 flex-grow flex flex-col shadow-2xl relative overflow-hidden group border border-gray-100 dark:border-gray-700 transition-colors">
+                            <!-- Output Header -->
+                            <div class="bg-gray-50 dark:bg-gray-800/80 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center rounded-t-2xl">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                                    <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Prompt Generato</span>
+                                </div>
+                                <button onclick="optimizePrompt()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-lg shadow-indigo-900/20 btn-hover">
+                                    <span id="opt-icon">⚡</span> <span id="opt-text">Ottimizza con Gemini</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Text Area -->
+                            <textarea id="prompt-output" class="w-full flex-grow p-6 text-gray-800 dark:text-gray-200 bg-white dark:bg-darkcard font-mono text-sm leading-relaxed resize-none outline-none transition-colors rounded-b-2xl" readonly></textarea>
+                            
+                            <!-- Negative Prompt Overlay -->
+                            <div class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2.5">
+                                        <input type="checkbox" id="merge-negative" onchange="buildPrompt()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
+                                        <label for="merge-negative" class="text-[10px] font-bold text-red-500 uppercase cursor-pointer select-none">Includi Negative</label>
+                                    </div>
+                                    <button onclick="copyPrompt()" class="bg-black hover:bg-gray-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-xs font-bold px-5 py-2 rounded-lg transition-colors flex items-center gap-2 btn-hover">
+                                        Copia Tutto
+                                    </button>
+                                </div>
+                                <p id="negative-preview" class="text-[10px] text-gray-400 dark:text-gray-500 truncate font-mono select-none">
+                                    ...
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- History & Actions -->
+                        <div class="mt-6 flex justify-between items-center">
+                            <div class="flex-grow overflow-hidden mr-4">
+                                <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Recenti</h4>
+                                <div id="history-list" class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                                    <!-- History items -->
+                                </div>
+                            </div>
+                            <!-- Export Button -->
+                            <button onclick="downloadHistory()" class="text-xs text-gray-400 hover:text-white underline whitespace-nowrap self-end mb-3 mr-1">
+                                Scarica .txt
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JS Logic -->
+    <script>
+        let apiKey = localStorage.getItem('atelier_api_key') || "";
+        let savedModel = localStorage.getItem('atelier_model') || "gemini-2.5-flash-preview-09-2025";
+        let currentChart = null;
+        let selectedMaster = null;
+        let selectedAR = "3:2"; 
+        let selectedTone = "default"; 
+
+        // THE DATABASE - SORTED BY SURNAME
+        const photographers = [
+            {
+                id: 'adams',
+                name: 'Ansel Adams',
+                gradient: 'linear-gradient(to bottom right, #000000, #434343)',
+                desc: '<b>Il Sistema Zonale.</b> Il maestro assoluto del paesaggio. La sua tecnica garantisce una gamma tonale perfetta, dal nero più profondo al bianco puro, con dettaglio ovunque.',
+                stats: [95, 0, 20, 90, 10],
+                valCam: 'Large format camera, f/64',
+                valLight: 'Dramatic sunlight breaking through heavy clouds', 
+                valFilm: 'High contrast black and white, Red Filter style',
+                valStyle: 'in the style of Ansel Adams',
+                valFocus: 'f/64 (Tutto a Fuoco)',
+                negContext: 'color, colorized, tinted, blur, shallow depth of field, digital hdr',
+                defaultSubject: 'Picco di montagna granitico tra le nuvole',
+                defaultAction: 'Immobile nella maestosità della natura',
+                recAR: '4:5'
+            },
+            {
+                id: 'anderson',
+                name: 'Wes Anderson',
+                gradient: 'linear-gradient(to bottom right, #fca5a5, #93c5fd)',
+                desc: '<b>Simmetria Pastello.</b> Composizioni compulsive e colori da favola. Inquadrature perfettamente frontali (planimetriche), estetica da casa delle bambole e palette cromatica definita.',
+                stats: [40, 80, 0, 10, 100],
+                valCam: 'Wide angle lens 24mm',
+                valLight: 'Flat, even lighting (high key)',
+                valFilm: 'Kodachrome 64 film', 
+                valStyle: 'in the style of Wes Anderson',
+                valFocus: 'f/11 (Nitido)',
+                negContext: 'asymmetry, dutch angle, dark shadows, gritty, black and white',
+                defaultSubject: 'Concierge alla reception di un Grand Hotel',
+                defaultAction: 'Perfettamente immobile e simmetrico',
+                recAR: '16:9'
+            },
+            {
+                id: 'bresson',
+                name: 'Henri Cartier-Bresson',
+                gradient: 'linear-gradient(to bottom right, #333333, #e5e5e5)',
+                desc: '<b>Il Momento Decisivo.</b> Il padre del reportage. Cerca la geometria spontanea nel caos della vita quotidiana. Uso esclusivo del 50mm, nessuna messa in scena.',
+                stats: [70, 0, 70, 95, 0],
+                valCam: 'Leica M3 with 50mm lens',
+                valLight: 'Soft, diffused natural light',
+                valFilm: 'Tri-X 400 B&W film',
+                valStyle: 'in the style of Henri Cartier-Bresson',
+                valFocus: 'f/8 (Bilanciato)',
+                negContext: 'color, studio lighting, posed, artificial, telephoto compression',
+                defaultSubject: 'Un uomo che salta una pozzanghera',
+                defaultAction: 'Colto a mezz\'aria, riflesso nell\'acqua',
+                recAR: '3:2'
+            },
+            {
+                id: 'crewdson',
+                name: 'Gregory Crewdson',
+                gradient: 'linear-gradient(to bottom right, #1e3a8a, #111827)',
+                desc: '<b>Cinema Suburbano.</b> Scene inquietanti in periferia ("Twilight Zone"). Luci cinematografiche complesse, dettagli maniacali e un senso di solitudine sospesa.',
+                stats: [75, 60, 10, 30, 100],
+                valCam: 'Large format camera, f/64',
+                valLight: 'Cinematic artificial lighting (tungsten)',
+                valFilm: 'Cinematic Color Grade',
+                valStyle: 'in the style of Gregory Crewdson',
+                valFocus: 'f/16 (Tutto a Fuoco)',
+                negContext: 'black and white, candid, handheld, blurry, simple lighting',
+                defaultSubject: 'Figura solitaria in un giardino suburbano',
+                defaultAction: 'Fissa una finestra illuminata al crepuscolo',
+                recAR: '16:9'
+            },
+            {
+                id: 'depardon',
+                name: 'Raymond Depardon',
+                gradient: 'linear-gradient(to bottom right, #d1d5db, #fcd34d)',
+                desc: '<b>Il Tempo Sospeso.</b> La Francia rurale e i "tempi morti". Fotografia frontale, colori pastello desaturati, estetica della provincia e del silenzio.',
+                stats: [40, 40, 30, 90, 10],
+                valCam: 'Leica M3 with 50mm lens',
+                valLight: 'Soft, diffused natural light',
+                valFilm: 'Muted, desaturated tones',
+                valStyle: 'in the style of Raymond Depardon',
+                valFocus: 'f/8 (Bilanciato)',
+                negContext: 'high contrast, harsh shadows, dramatic lighting, vivid colors, action, movement, wide angle distortion',
+                defaultSubject: 'Una piazza di paese deserta in Francia',
+                defaultAction: 'Vuota, silenziosa, in attesa',
+                recAR: '3:2'
+            },
+            {
+                id: 'eggleston',
+                name: 'William Eggleston',
+                gradient: 'linear-gradient(to bottom right, #ef4444, #3b82f6)',
+                desc: '<b>Il Banale Sublime.</b> Il padre del colore americano. Toni saturi e vibranti (Dye Transfer), soggetti quotidiani banali resi monumentali attraverso prospettive insolite.',
+                stats: [60, 100, 40, 95, 20],
+                valCam: 'Leica with 50mm or 35mm',
+                valLight: 'Golden Hour or harsh sunlight',
+                valFilm: 'Dye Transfer Print (Vivid Colors)',
+                valStyle: 'in the style of William Eggleston',
+                valFocus: 'f/11 (Nitido)',
+                negContext: 'black and white, muted, desaturated, studio, dramatic lighting',
+                defaultSubject: 'Un triciclo abbandonato in un vialetto',
+                defaultAction: 'Illuminato dal sole pomeridiano',
+                recAR: '3:2'
+            },
+            {
+                id: 'guler',
+                name: 'Ara Güler',
+                gradient: 'linear-gradient(to bottom right, #111827, #6b7280)',
+                desc: '<b>L\'Occhio di Istanbul.</b> Fotografia in bianco e nero carica di "Hüzün" (malinconia). Silhouette potenti, fumo, nebbia e chiaroscuro profondo.',
+                stats: [80, 0, 70, 95, 10],
+                valCam: 'Leica M3 with 35mm lens',
+                valLight: 'Natural dramatic light, deep shadows (chiaroscuro)',
+                valFilm: 'High contrast black and white film (Tri-X)',
+                valStyle: 'in the style of Ara Guler',
+                valFocus: 'f/5.6 (Ambientale)',
+                negContext: 'color, colorized, bright cheerful colors, modern architecture, smartphones',
+                defaultSubject: 'Vecchi pescatori sul Bosforo',
+                defaultAction: 'Riparano le reti nella nebbia mattutina',
+                recAR: '3:2'
+            },
+            {
+                id: 'fanho',
+                name: 'Fan Ho',
+                gradient: 'linear-gradient(to bottom right, #000000, #fbbf24)',
+                desc: '<b>Il Teatro delle Ombre.</b> Il "Rembrandt dell\'Est". Luci e ombre drammatiche a Hong Kong. Composizioni geometriche rigorose, fumo e raggi di luce mistici.',
+                stats: [95, 0, 40, 70, 80],
+                valCam: 'Rolleiflex medium format',
+                valLight: 'Shafts of light (God rays), high contrast backlight',
+                valFilm: 'High contrast B&W',
+                valStyle: 'in the style of Fan Ho',
+                valFocus: 'f/8 (Geometrico)',
+                negContext: 'color, flat lighting, cloudy, messy composition',
+                defaultSubject: 'Mercato di Hong Kong anni \'50',
+                defaultAction: 'Venditore solitario in un raggio di luce',
+                recAR: '1:1'
+            },
+            {
+                id: 'lange',
+                name: 'Dorothea Lange',
+                gradient: 'linear-gradient(to bottom right, #4b5563, #9ca3af)',
+                desc: '<b>L\'Empatia Documentaria.</b> La Grande Depressione e la resilienza umana. Ritratti crudi, focus su mani e volti segnati, dignità nella povertà.',
+                stats: [60, 0, 50, 100, 10], 
+                valCam: 'Graflex Super D large format',
+                valLight: 'Natural daylight, often harsh or open shade',
+                valFilm: 'Classic B&W film (1930s emulsion)',
+                valStyle: 'in the style of Dorothea Lange',
+                valFocus: 'f/8 (Documentario)',
+                negContext: 'color, modern clothing, luxury, smiling, makeup, studio',
+                defaultSubject: 'Madre migrante in un campo di lavoro',
+                defaultAction: 'Tiene in braccio un bambino, sguardo preoccupato',
+                recAR: '4:5'
+            },
+            {
+                id: 'leibovitz',
+                name: 'Annie Leibovitz',
+                gradient: 'linear-gradient(to bottom right, #1f2937, #4b5563)',
+                desc: '<b>La Narrazione Epica.</b> Ritratto editoriale narrativo. Luci pittoriche, set complessi, post-produzione che rende lo sfondo "crushed" (scuro e denso).',
+                stats: [65, 50, 10, 50, 90],
+                valCam: 'Rolleiflex medium format',
+                valLight: 'Soft, diffused natural light',
+                valFilm: 'Cinematic Color Grade',
+                valStyle: 'in the style of Annie Leibovitz',
+                valFocus: 'f/4 (Sfondo Morbido)',
+                negContext: 'harsh lighting, candid, snapshot, high key, white background',
+                defaultSubject: 'Scrittore famoso alla scrivania vintage',
+                defaultAction: 'In posa drammatica in una grande libreria',
+                recAR: '4:5'
+            },
+            {
+                id: 'leiter',
+                name: 'Saul Leiter',
+                gradient: 'linear-gradient(to bottom right, #ef4444, #e5e7eb, #3b82f6)',
+                desc: '<b>Astrazione Urbana.</b> Pioniere del colore poetico. Scatti attraverso vetri appannati, pioggia, riflessi e composizioni audaci che nascondono il soggetto.',
+                stats: [30, 70, 60, 80, 80],
+                valCam: 'Telephoto lens (90mm or 135mm)',
+                valLight: 'Soft window light, rainy mood, reflections',
+                valFilm: 'Early Kodachrome (Muted/Warm)',
+                valStyle: 'in the style of Saul Leiter',
+                valFocus: 'f/4 (Compresso/Sfocato)',
+                negContext: 'wide angle, clear view, sharp focus, digital, harsh contrast',
+                defaultSubject: 'Ombrello rosso visto attraverso un vetro appannato',
+                defaultAction: 'Cammina sotto la pioggia a New York',
+                recAR: '4:5'
+            },
+            {
+                id: 'lindbergh',
+                name: 'Peter Lindbergh',
+                gradient: 'linear-gradient(to bottom right, #000000, #9ca3af)',
+                desc: '<b>La Verità Nuda.</b> Ritratti di moda senza trucco, autentici ed emotivi. Bianco e nero a grana grossa, luce naturale morbida, rifiuto del ritocco.',
+                stats: [60, 0, 60, 90, 40],
+                valCam: '85mm portrait lens, f/1.8',
+                valLight: 'Soft, diffused natural light',
+                valFilm: 'Tri-X 400 B&W film',
+                valStyle: 'in the style of Peter Lindbergh',
+                valFocus: 'f/2.8 (Bokeh Leggero)',
+                negContext: 'makeup, airbrushed, plastic skin, color, studio lighting, artificial',
+                defaultSubject: 'Supermodella senza trucco',
+                defaultAction: 'Ride naturalmente con i capelli al vento',
+                recAR: '4:5'
+            },
+            {
+                id: 'maier',
+                name: 'Vivian Maier',
+                gradient: 'linear-gradient(to bottom right, #374151, #d1d5db)',
+                desc: '<b>Il Segreto Riflesso.</b> Street photography speculare. Autoritratti in vetrine e specchi, formato quadrato, osservazione silenziosa della vita urbana.',
+                stats: [65, 0, 50, 90, 10],
+                valCam: 'Rolleiflex medium format',
+                valLight: 'Soft, diffused natural light',
+                valFilm: 'Tri-X 400 B&W film',
+                valStyle: 'in the style of Vivian Maier',
+                valFocus: 'f/8 (Bilanciato)',
+                negContext: 'color, modern technology, smartphones, digital',
+                defaultSubject: 'Autoritratto riflesso in una vetrina',
+                defaultAction: 'Tiene la Rolleiflex all\'altezza della vita',
+                recAR: '1:1'
+            },
+            {
+                id: 'mccurry',
+                name: 'Steve McCurry',
+                gradient: 'linear-gradient(to bottom right, #dc2626, #d97706)',
+                desc: '<b>Il Colore dell\'Anima.</b> Ritratti con contatto visivo ipnotico. Colori saturi e caldi (stile Kodachrome), luce morbida ma direzionale, focus sugli occhi.',
+                stats: [60, 95, 20, 80, 30],
+                valCam: '85mm portrait lens, f/1.8',
+                valLight: 'Soft, diffused natural light',
+                valFilm: 'Kodachrome 64 film',
+                valStyle: 'in the style of Steve McCurry',
+                valFocus: 'f/1.8 (Sfondo Sfocato)',
+                negContext: 'black and white, desaturated, harsh shadows, wide angle distortion',
+                defaultSubject: 'Anziano con turbante colorato',
+                defaultAction: 'Guarda direttamente in camera con occhi intensi',
+                recAR: '4:5'
+            },
+            {
+                id: 'newton',
+                name: 'Helmut Newton',
+                gradient: 'linear-gradient(to bottom right, #000000, #ffffff)',
+                desc: '<b>Moda High Voltage.</b> Donne statuarie e dominanti. Ambientazioni fredde o lussuose, uso aggressivo del flash diretto che crea ombre nette.',
+                stats: [90, 0, 50, 60, 90],
+                valCam: 'Hasselblad 500C',
+                valLight: 'Harsh, direct flash lighting',
+                valFilm: 'High contrast black and white',
+                valStyle: 'in the style of Helmut Newton',
+                valFocus: 'f/8 (Nitido)',
+                negContext: 'soft lighting, romantic, blurred background, weak pose, smiling',
+                defaultSubject: 'Donna alta in smoking (Le Smoking)',
+                defaultAction: 'In piedi in un corridoio d\'hotel di notte',
+                recAR: '4:5'
+            },
+            {
+                id: 'salgado',
+                name: 'Sebastião Salgado',
+                gradient: 'linear-gradient(to bottom right, #000000, #525252)',
+                desc: '<b>La Genesi Umana.</b> Documentario epico. Nobilitazione del lavoro e della natura attraverso un bianco e nero materico, metallico e grandioso.',
+                stats: [85, 0, 80, 85, 20],
+                valCam: 'Wide angle lens 24mm',
+                valLight: "High contrast 'chiaroscuro'",
+                valFilm: 'Tri-X 400 B&W film',
+                valStyle: 'in the style of Sebastião Salgado',
+                valFocus: 'f/11 (Profondo)',
+                negContext: 'color, flat lighting, smooth skin, clean clothes, studio',
+                defaultSubject: 'Minatori coperti di fango',
+                defaultAction: 'Scalano una scala in una miniera a cielo aperto',
+                recAR: '3:2'
+            }
+        ];
+
+        // INIT
+        document.addEventListener('DOMContentLoaded', () => {
+            initPhotographerList();
+            initChart();
+            selectPhotographer('adams'); // Default
+            initBuilderListeners();
+            loadHistoryUI();
+            
+            // Mobile Menu Toggle Fix
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                });
+            }
+        });
+
+        // --- UI Functions ---
+        function scrollToSection(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); }
+        function openSettings() { 
+            const m = document.getElementById('settings-modal');
+            document.getElementById('api-key-input').value = apiKey;
+            document.getElementById('model-select').value = savedModel;
+            m.classList.add('active'); 
+        }
+        function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
+        function saveSettings() {
+            apiKey = document.getElementById('api-key-input').value.trim();
+            savedModel = document.getElementById('model-select').value;
+            localStorage.setItem('atelier_api_key', apiKey);
+            localStorage.setItem('atelier_model', savedModel);
+            closeSettings();
+        }
+
+        function toggleRefInput() {
+            const mode = document.getElementById('ref-image-mode').value;
+            const urlInput = document.getElementById('ref-image-url');
+            if(mode === 'url') {
+                urlInput.classList.remove('hidden');
+            } else {
+                urlInput.classList.add('hidden');
+                urlInput.value = ''; // Reset
+            }
+            buildPrompt();
+        }
+        
+        function resetBuilder() {
+             // Reset core fields
+             document.getElementById('input-subject').value = "";
+             document.getElementById('input-action').value = "";
+             document.getElementById('input-text').value = "";
+             document.getElementById('ref-image-mode').value = "none";
+             document.getElementById('ref-image-url').classList.add('hidden');
+             document.getElementById('ref-image-url').value = "";
+             
+             // Reset technicals to master defaults (re-run select)
+             if(selectedMaster) selectPhotographer(selectedMaster.id);
+             else buildPrompt();
+        }
+
+        // --- Core Logic ---
+        function initPhotographerList() {
+            const list = document.getElementById('photographer-list');
+            photographers.forEach(p => {
+                const div = document.createElement('div');
+                div.className = `photographer-btn p-3 rounded-xl cursor-pointer border border-transparent hover:bg-white dark:hover:bg-gray-800/80 transition-all flex items-center gap-3.5 group`;
+                div.setAttribute('data-id', p.id);
+                div.onclick = () => selectPhotographer(p.id);
+                div.innerHTML = `
+                    <div class="style-preview" style="background: ${p.gradient}"></div>
+                    <div class="flex-grow flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white transition-colors">${p.name}</span>
+                        <span class="arrow text-[10px] text-black dark:text-white opacity-0 transition-opacity">●</span>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function selectPhotographer(id) {
+            selectedMaster = photographers.find(p => p.id === id);
+            
+            // UI Update
+            document.querySelectorAll('.photographer-btn').forEach(b => {
+                b.classList.remove('selected');
+                if(b.getAttribute('data-id') === id) b.classList.add('selected');
+            });
+
+            // Text Update using innerHTML to render bold tags
+            document.getElementById('master-name').innerText = selectedMaster.name;
+            document.getElementById('master-desc').innerHTML = selectedMaster.desc;
+            document.getElementById('spec-cam').innerText = selectedMaster.valCam;
+            document.getElementById('spec-film').innerText = selectedMaster.valFilm;
+            document.getElementById('spec-light').innerText = selectedMaster.valLight;
+            document.getElementById('spec-focus').innerText = selectedMaster.valFocus;
+            
+            // Dynamic Negative Update
+            const baseNeg = "3d render, cgi, plastic skin, doll-like, airbrushed, oversaturated, hdr, watermark";
+            const fullNeg = `${baseNeg}, ${selectedMaster.negContext}`;
+            document.getElementById('spec-negative').innerText = fullNeg;
+            document.getElementById('negative-preview').innerText = fullNeg;
+
+            updateChart(selectedMaster);
+            
+            // Auto-Fill Form
+            setSelectValue('select-camera', selectedMaster.valCam);
+            setSelectValue('select-light', selectedMaster.valLight);
+            setSelectValue('select-film', selectedMaster.valFilm);
+            setSelectValue('select-aperture', ""); 
+            setSelectValue('select-framing', ""); 
+            
+            // Only fill text if it's empty to avoid overwriting user work
+            if(!document.getElementById('input-subject').value) document.getElementById('input-subject').value = selectedMaster.defaultSubject;
+            if(!document.getElementById('input-action').value) document.getElementById('input-action').value = selectedMaster.defaultAction;
+            
+            setRatio(selectedMaster.recAR || "3:2");
+            setTone('default'); 
+            buildPrompt();
+        }
+
+        function setSelectValue(id, value) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            for(let i=0; i<el.options.length; i++) {
+                if(el.options[i].value === value) {
+                    el.selectedIndex = i;
+                    return;
+                }
+            }
+        }
+
+        function setRatio(ratio) {
+            selectedAR = ratio;
+            document.querySelectorAll('.ar-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.ar-btn').forEach(b => {
+                if(b.innerText.includes(ratio)) b.classList.add('selected');
+            });
+            
+            // Visualizer
+            const box = document.getElementById('ratio-preview-box');
+            const label = document.getElementById('ar-label');
+            label.innerText = ratio;
+            
+            let w=40, h=40;
+            if(ratio==='1:1') { w=40; h=40; }
+            if(ratio==='3:2') { w=60; h=40; }
+            if(ratio==='4:5') { w=32; h=40; }
+            if(ratio==='16:9') { w=70; h=39; }
+            box.style.width = w+'px'; box.style.height = h+'px';
+            
+            buildPrompt();
+        }
+
+        function setTone(t) {
+            selectedTone = t;
+            document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-tone-'+t).classList.add('selected');
+            buildPrompt();
+        }
+
+        // --- Builder Logic ---
+        function initBuilderListeners() {
+            // Safety check for all potential inputs
+            const ids = ['input-subject', 'input-action', 'select-camera', 'select-light', 'select-film', 'select-aperture', 'input-text', 'ref-image-mode', 'ref-image-url', 'select-framing'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.addEventListener('input', () => buildPrompt(false));
+                if(el && id === 'ref-image-mode') el.addEventListener('change', () => buildPrompt(false));
+            });
+        }
+
+        function buildPrompt(isOptimized = false) {
+            if(isOptimized && document.getElementById('prompt-output').value) return;
+
+            const subject = document.getElementById('input-subject').value || "[Soggetto]";
+            const action = document.getElementById('input-action').value;
+            const cam = document.getElementById('select-camera').value;
+            const light = document.getElementById('select-light').value;
+            
+            // Ref Image Logic
+            const refMode = document.getElementById('ref-image-mode').value;
+            const refUrl = document.getElementById('ref-image-url').value;
+            let refInstruction = "";
+            
+            if (refMode === 'upload') {
+                refInstruction = "[ISTRUZIONE PER AI: L'utente allegherà un'immagine. USA QUELL'IMMAGINE come riferimento principale per la composizione/struttura, applicando lo stile descritto sotto.] ";
+            } else if (refMode === 'url' && refUrl) {
+                refInstruction = `[REFERENCE IMAGE URL: ${refUrl}] [INSTRUCTION: Use this image URL as composition reference.] `;
+            }
+
+            // Safe access for elements
+            const filmEl = document.getElementById('select-film');
+            let film = filmEl ? filmEl.value : "";
+            
+            const apertureEl = document.getElementById('select-aperture');
+            let aperture = apertureEl ? apertureEl.value : "";
+            
+            const framingEl = document.getElementById('select-framing');
+            let framing = framingEl ? framingEl.value : "";
+            
+            const textEl = document.getElementById('input-text');
+            let textOverlay = textEl ? textEl.value : "";
+
+            // Tone Override Logic
+            if(selectedTone === 'bw') film = "Black and white photography, monochrome, " + film.replace('Color', '').replace('Kodachrome', '');
+            if(selectedTone === 'color') film = "Color photography, " + film.replace('Black and white', '');
+
+            let p = `${refInstruction}${selectedMaster ? selectedMaster.valStyle : 'Professional photo'}. `;
+            p += `Subject: ${subject}. `;
+            if(action) p += `Action/Context: ${action}. `;
+            if(framing) p += `Framing: ${framing}. `;
+            if(textOverlay) p += `Text Overlay: The text "${textOverlay}" is clearly visible. `;
+            if(cam) p += `Camera: ${cam}. `;
+            if(aperture) p += `Aperture: ${aperture}. `;
+            if(light) p += `Lighting: ${light}. `;
+            if(film) p += `Film/Medium: ${film}. `;
+            p += `4K resolution, photorealistic.`;
+            
+            if(selectedAR) p += ` --ar ${selectedAR}`;
+            
+            // Append Negative if checked
+            if(document.getElementById('merge-negative').checked) {
+                const baseNeg = "3d render, cgi, plastic skin, doll-like, airbrushed, oversaturated, hdr, watermark";
+                const contextNeg = selectedMaster ? selectedMaster.negContext : "";
+                p += ` --no ${baseNeg}, ${contextNeg}`;
+            }
+
+            document.getElementById('prompt-output').value = p;
+        }
+
+        // --- Chart.js ---
+        function initChart() {
+            const ctx = document.getElementById('styleRadarChart').getContext('2d');
+            currentChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Contrasto', 'Saturazione', 'Grana', 'Realismo', 'Messa in Scena'],
+                    datasets: [{
+                        data: [0,0,0,0,0],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)', // Use blue for better visibility
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2, pointRadius: 2,
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(156, 163, 175, 0.2)' }, // lighter grey
+                            grid: { color: 'rgba(156, 163, 175, 0.2)' },
+                            pointLabels: { font: { size: 11, family: 'Inter' }, color: '#6b7280' },
+                            min: 0, max: 100, ticks: { display: false, stepSize: 25 }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+        function updateChart(m) {
+            currentChart.data.datasets[0].data = m.stats;
+            currentChart.update();
+        }
+
+        // --- AI Features ---
+        async function generateIdea() {
+            if(!apiKey) { openSettings(); return; }
+            const btn = document.getElementById('idea-icon');
+            btn.innerHTML = '<div class="loader"></div>';
+            
+            try {
+                const prompt = `Sei un photo editor. Suggerisci UN SOLO soggetto (in inglese) per una foto nello stile di ${selectedMaster.name}. Solo il soggetto, niente altro.`;
+                const res = await callGemini(prompt);
+                if(res) {
+                    document.getElementById('input-subject').value = res.trim();
+                    buildPrompt();
+                }
+            } catch(e) { alert("Errore AI: Controlla la chiave API"); }
+            btn.innerHTML = '✨';
+        }
+
+        async function optimizePrompt() {
+            if(!apiKey) { openSettings(); return; }
+            const txt = document.getElementById('prompt-output').value;
+            const btnIcon = document.getElementById('opt-icon');
+            const btnTxt = document.getElementById('opt-text');
+            
+            btnIcon.innerHTML = '<div class="loader"></div>';
+            btnTxt.innerText = "Ottimizzando...";
+            
+            try {
+                // Remove --ar and --no for optimization
+                let cleanTxt = txt.split('--ar')[0].split('--no')[0];
+                
+                // Get ref mode to pass correct instruction
+                const refMode = document.getElementById('ref-image-mode').value;
+                let refContext = "";
+                if(refMode === 'upload') refContext = "IMPORTANT: The user will provide a reference image. Ensure the prompt starts with [INSTRUCTION: Use attached image...].";
+                
+                let sys = `Act as a Prompt Engineer for Nano Banana Pro. Rewrite the user prompt to be highly photorealistic and technically precise.
+                Style: ${selectedMaster.name}.
+                Rules:
+                1. Translate Italian to English.
+                2. Keep structure: [Ref Instruction] [Style] [Subject] [Action] [Framing] [Camera] [Light] [Film].
+                3. Add sensory details (texture, atmosphere).
+                4. Respect aperture choice if present.
+                5. ${refContext}
+                6. Output ONLY the prompt string.`;
+                
+                const res = await callGemini(cleanTxt, sys);
+                if(res) {
+                    let final = res.trim();
+                    // Re-append technical flags
+                    if(selectedAR) final += ` --ar ${selectedAR}`;
+                    if(document.getElementById('merge-negative').checked) {
+                         const baseNeg = "3d render, cgi, plastic skin, doll-like, airbrushed, oversaturated, hdr, watermark";
+                         const contextNeg = selectedMaster ? selectedMaster.negContext : "";
+                         final += ` --no ${baseNeg}, ${contextNeg}`;
+                    }
+                    document.getElementById('prompt-output').value = final;
+                    saveToHistory(final);
+                }
+            } catch(e) { alert("Errore AI: Controlla la chiave API"); console.log(e); }
+            
+            btnIcon.innerHTML = '⚡';
+            btnTxt.innerText = "Ottimizza con Gemini";
+        }
+
+        async function callGemini(userMsg, sysMsg = "") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${savedModel}:generateContent?key=${apiKey}`;
+            const body = {
+                contents: [{ parts: [{ text: userMsg }] }]
+            };
+            if(sysMsg) body.systemInstruction = { parts: [{ text: sysMsg }] };
+            
+            const req = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+            const res = await req.json();
+            return res.candidates?.[0]?.content?.parts?.[0]?.text;
+        }
+
+        // --- Utils ---
+        function copyPrompt() {
+            const t = document.getElementById('prompt-output').value;
+            navigator.clipboard.writeText(t);
+            saveToHistory(t);
+            alert("Copiato!");
+        }
+        
+        function saveToHistory(txt) {
+            if(!txt) return;
+            let h = JSON.parse(localStorage.getItem('atelier_hist') || '[]');
+            if(h[0] !== txt) {
+                h.unshift(txt);
+                if(h.length > 10) h.pop();
+                localStorage.setItem('atelier_hist', JSON.stringify(h));
+                loadHistoryUI();
+            }
+        }
+        
+        function loadHistoryUI() {
+            const h = JSON.parse(localStorage.getItem('atelier_hist') || '[]');
+            const c = document.getElementById('history-list');
+            c.innerHTML = '';
+            h.forEach(t => {
+                const d = document.createElement('div');
+                d.className = 'flex-shrink-0 w-48 bg-white dark:bg-gray-800 p-2.5 rounded-lg text-[10px] text-gray-600 dark:text-gray-300 truncate cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors shadow-sm';
+                d.innerText = t;
+                d.onclick = () => { document.getElementById('prompt-output').value = t; };
+                c.appendChild(d);
+            });
+        }
+
+        // --- EXPORT FEATURE (NEW) ---
+        function downloadHistory() {
+            const h = JSON.parse(localStorage.getItem('atelier_hist') || '[]');
+            if(h.length === 0) { alert("Nessun prompt da salvare!"); return; }
+            
+            const date = new Date().toISOString().split('T')[0];
+            const content = `ARCHIVIO PROMPT - MAESTRI DI LUCE\nData: ${date}\n\n` + h.join('\n\n-------------------\n\n');
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `atelier_history_${date}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
