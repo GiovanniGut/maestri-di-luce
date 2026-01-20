@@ -851,9 +851,7 @@
             setSelectValue('select-aperture', ""); 
             setSelectValue('select-framing', ""); 
             
-            // Only fill text if it's empty to avoid overwriting user work
-            if(!document.getElementById('input-subject').value) document.getElementById('input-subject').value = selectedMaster.defaultSubject;
-            if(!document.getElementById('input-action').value) document.getElementById('input-action').value = selectedMaster.defaultAction;
+            // Fields left empty for user input
             
             setRatio(selectedMaster.recAR || "3:2");
             setTone('default'); 
