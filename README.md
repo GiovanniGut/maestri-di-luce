@@ -13,7 +13,7 @@ Il progetto si basa sulla sintesi tra la tecnica fotografica classica e la poten
 Per padroneggiare lo strumento, consulta i pilastri documentali inclusi:
 
 1. [**Guida ai Prompt d'Autore**](./Guida_Prompt_Fotografi.md): Manuale sulla grammatica del prompt e analisi stilistica.
-2. [**Infografica Interattiva**](./infographic_atelier.html): Mappa operativa dell'anatomia del prompt.
+2. [**Infografica Interattiva**](https://giovannigut.github.io/maestri-di-luce/infographic_atelier.html): Mappa operativa dell'anatomia del prompt.
 
 ## **✨ Caratteristiche Principali**
 
