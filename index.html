@@ -30,6 +30,10 @@
         .serif { font-family: 'Playfair Display', serif; }
 
         .chart-container { position: relative; height: 300px; width: 100%; }
+        /* touch-action: senza questo il trascinamento sul grafico
+           farebbe scorrere la pagina invece di muovere il vertice. */
+        #styleRadarChart { touch-action: none; cursor: grab; }
+        #styleRadarChart.dragging { cursor: grabbing; }
 
         /* UI Polish */
         .btn-hover { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -311,6 +315,14 @@
                             <div class="chart-container mt-auto">
                                 <canvas id="styleRadarChart"></canvas>
                             </div>
+                            <div class="flex justify-between items-center gap-3 mt-2 min-h-[28px]">
+                                <p id="chart-hint" class="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
+                                    Trascina i vertici per allontanarti dal maestro.
+                                </p>
+                                <button onclick="resetStyleOverride()" id="chart-reset" class="hidden text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 hover:underline px-2 py-1.5 rounded shrink-0">
+                                    Ripristina
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Technical Specs Panel -->
@@ -408,6 +420,20 @@
                             è la lingua in cui i modelli lo hanno imparato.
                         </p>
                     </div>
+                </div>
+
+                <!-- ASSETTI SALVATI -->
+                <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800 mb-12">
+                    <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">I tuoi assetti</label>
+                            <p class="text-[10px] text-gray-500 mt-1">Maestro, ottica, luce, pellicola, formato e motore. Il soggetto resta fuori: l'assetto è un modo di guardare, non uno scatto.</p>
+                        </div>
+                        <button onclick="saveRig()" class="text-[11px] font-bold uppercase tracking-wider text-emerald-300 hover:text-white border border-emerald-500/40 hover:border-emerald-400 hover:bg-emerald-500/10 rounded-lg px-4 py-2.5 transition-colors shrink-0">
+                            Salva assetto attuale
+                        </button>
+                    </div>
+                    <div id="rig-list" class="flex flex-wrap gap-2"></div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -681,6 +707,90 @@
         let selectedTone = "default";
         let selectedEngine = localStorage.getItem('atelier_engine') || 'chatgpt';
         let selectedAttribution = localStorage.getItem('atelier_attr') || 'grammar';
+        let styleOverride = null;   // null = si usa l'assetto del maestro
+
+        /* ============================================================
+           I CINQUE ASSI DEL GRAFICO
+
+           Ogni asse sa dire come si scrive uno scostamento dal maestro,
+           in due intensità e due direzioni. La soglia evita che un
+           trascinamento minimo sporchi il prompt: sotto i 18 punti di
+           differenza non viene scritto nulla.
+           ============================================================ */
+        const DEV_SOFT = 18, DEV_HARD = 45;
+
+        const STYLE_AXES = [
+            {
+                label: 'Contrasto',
+                up:   [['contrasto più marcato, ombre più dense',
+                        'deeper contrast, the shadows heavier'],
+                       ['contrasto durissimo — neri chiusi, alte luci al limite del bruciato',
+                        'hard, unforgiving contrast — blacks blocked up, highlights close to clipping']],
+                down: [['contrasto più morbido, gamma compressa verso i grigi medi',
+                        'softer contrast, the tonal range compressed toward the mid-greys'],
+                       ['luce piatta e poco contrastata — nessun nero pieno, nessun bianco pieno',
+                        'flat, low-contrast light — no true black and no true white']]
+            },
+            {
+                label: 'Saturazione',
+                up:   [['colore più ricco e saturo',
+                        'richer, more saturated colour'],
+                       ['colore intensamente saturo, tinte spinte al limite della stampa',
+                        'intensely saturated colour, the hues pushed to the edge of the print']],
+                down: [['colore attenuato e trattenuto',
+                        'muted, restrained colour'],
+                       ['colore quasi prosciugato, appena una traccia sopra il monocromo',
+                        'colour drained almost away, barely a trace above monochrome']]
+            },
+            {
+                label: 'Grana',
+                up:   [['grana della pellicola ben visibile',
+                        'visible film grain'],
+                       ['grana grossa e marcata, pellicola tirata in sviluppo',
+                        'coarse, heavy grain from film pushed in development']],
+                down: [['grana fine e superficie più pulita',
+                        'fine grain and a cleaner surface'],
+                       ['superficie liscia, quasi priva di grana',
+                        'a smooth surface, almost free of grain']]
+            },
+            {
+                label: 'Realismo',
+                up:   [['colto senza posa, nulla di sistemato',
+                        'caught unposed, nothing arranged'],
+                       ['crudo e documentario, come rubato di passaggio',
+                        'raw and documentary, as if grabbed in passing']],
+                down: [['leggermente stilizzato, un passo oltre il letterale',
+                        'slightly stylised, a step away from the literal'],
+                       ['apertamente costruito e onirico, più tableau che documento',
+                        'openly constructed and dreamlike, closer to a tableau than a document']]
+            },
+            {
+                label: 'Messa in Scena',
+                up:   [['disposizione deliberata, gli elementi collocati con intenzione',
+                        'deliberately arranged, the elements placed with intent'],
+                       ['messa in scena elaborata come un set cinematografico, ogni elemento posizionato e illuminato',
+                        'elaborately staged like a film set, every element placed and lit']],
+                down: [['senza messa in scena, trovata così com\'era',
+                        'unstaged, found as it was'],
+                       ['nessuna costruzione — un momento semplicemente trovato e preso',
+                        'nothing constructed — a moment simply found and taken']]
+            }
+        ];
+
+        /* Confronta l'assetto trascinato con quello del maestro e produce
+           le clausole di scostamento, solo per gli assi mossi davvero. */
+        function styleDeviations(it) {
+            if (!styleOverride || !selectedMaster) return [];
+            const out = [];
+            styleOverride.forEach((v, i) => {
+                const delta = v - selectedMaster.stats[i];
+                if (Math.abs(delta) < DEV_SOFT) return;
+                const band = Math.abs(delta) >= DEV_HARD ? 1 : 0;
+                const dir = delta > 0 ? STYLE_AXES[i].up : STYLE_AXES[i].down;
+                out.push(dir[band][it ? 0 : 1]);
+            });
+            return out;
+        }
 
         const keyName = p => 'atelier_key_' + p;
         const getKey  = p => localStorage.getItem(keyName(p || provider)) || '';
@@ -1116,6 +1226,7 @@
             setEngine(selectedEngine, true);
             setAttribution(selectedAttribution, true);
             selectPhotographer('adams');
+            renderRigs();
             loadHistoryUI();
 
             const btn = document.getElementById('mobile-menu-btn');
@@ -1288,6 +1399,133 @@
             document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('selected'));
             document.getElementById('btn-tone-' + t).classList.add('selected');
             buildPrompt();
+        }
+
+        /* ============================================================
+           ASSETTI SALVATI
+
+           Un assetto è il modo di guardare, non lo scatto: conserva la
+           calibrazione tecnica e lascia fuori soggetto e azione, che sono
+           l'unica cosa che cambia davvero da una volta all'altra.
+           ============================================================ */
+        function readRigs() {
+            try { return JSON.parse(localStorage.getItem('atelier_rigs') || '[]'); }
+            catch { return []; }
+        }
+        function writeRigs(list) {
+            localStorage.setItem('atelier_rigs', JSON.stringify(list));
+            renderRigs();
+        }
+
+        function currentRig() {
+            return {
+                master: selectedMaster ? selectedMaster.id : null,
+                tone: selectedTone,
+                engine: selectedEngine,
+                attribution: selectedAttribution,
+                ar: selectedAR,
+                lang: val('select-lang'),
+                camera: val('select-camera'),
+                aperture: val('select-aperture'),
+                light: val('select-light'),
+                film: val('select-film'),
+                framing: val('select-framing'),
+                style: styleOverride ? styleOverride.slice() : null
+            };
+        }
+
+        function saveRig() {
+            const suggested = (selectedMaster ? selectedMaster.name : 'Assetto') +
+                              (styleOverride ? ' (modificato)' : '');
+            const name = (prompt('Nome dell\'assetto:', suggested) || '').trim();
+            if (!name) return;
+            const list = readRigs();
+            const rig = Object.assign({ id: 'g' + Date.now(), name }, currentRig());
+            const existing = list.findIndex(r => r.name.toLowerCase() === name.toLowerCase());
+            if (existing > -1) {
+                if (!confirm('Esiste già un assetto con questo nome. Lo sostituisco?')) return;
+                rig.id = list[existing].id;
+                list[existing] = rig;
+            } else {
+                list.unshift(rig);
+            }
+            writeRigs(list);
+        }
+
+        function applyRig(id) {
+            const rig = readRigs().find(r => r.id === id);
+            if (!rig) return;
+
+            styleOverride = rig.style ? rig.style.slice() : null;
+            if (rig.master) selectPhotographer(rig.master, true);
+
+            setSelectValue('select-camera', rig.camera);
+            setSelectValue('select-light', rig.light);
+            setSelectValue('select-film', rig.film);
+            setSelectValue('select-aperture', rig.aperture);
+            setSelectValue('select-framing', rig.framing);
+            if (rig.lang) document.getElementById('select-lang').value = rig.lang;
+
+            setAttribution(rig.attribution || 'grammar', true);
+            setEngine(rig.engine || 'chatgpt', true);
+            if (engines[selectedEngine].ratios.includes(rig.ar)) setRatio(rig.ar);
+            setTone(rig.tone || 'default');   // chiude chiamando buildPrompt()
+
+            updateChart(selectedMaster);
+            renderRigs();
+        }
+
+        function deleteRig(id, name) {
+            if (!confirm('Elimino l\'assetto «' + name + '»?')) return;
+            writeRigs(readRigs().filter(r => r.id !== id));
+        }
+
+        function renderRigs() {
+            const box = document.getElementById('rig-list');
+            const list = readRigs();
+            box.innerHTML = '';
+
+            if (!list.length) {
+                box.innerHTML = '<p class="text-[10px] text-gray-600">Nessun assetto salvato. Calibra i parametri come vuoi, poi premi «Salva assetto attuale».</p>';
+                return;
+            }
+
+            list.forEach(r => {
+                const { id, name, ...rest } = r;
+                const chip = document.createElement('div');
+                chip.className = 'rig-chip flex items-center rounded-lg border transition-colors';
+                chip.dataset.rig = JSON.stringify(rest);
+                const use = document.createElement('button');
+                use.className = 'rig-name text-[11px] px-3 py-2';
+                use.textContent = name;
+                use.title = 'Applica questo assetto';
+                use.onclick = () => applyRig(id);
+                const del = document.createElement('button');
+                del.className = 'text-gray-600 hover:text-red-400 px-2 py-2 text-sm leading-none';
+                del.textContent = '×';
+                del.setAttribute('aria-label', 'Elimina ' + name);
+                del.onclick = () => deleteRig(id, name);
+                chip.appendChild(use); chip.appendChild(del);
+                box.appendChild(chip);
+            });
+            highlightActiveRig();
+        }
+
+        /* Chiamata a ogni modifica dei parametri: tocca solo le classi,
+           così l'elenco non viene ricostruito mentre scrivi. */
+        function highlightActiveRig() {
+            const now = JSON.stringify(currentRig());
+            document.querySelectorAll('.rig-chip').forEach(chip => {
+                const active = chip.dataset.rig === now;
+                chip.classList.toggle('border-emerald-400', active);
+                chip.classList.toggle('bg-emerald-500/10', active);
+                chip.classList.toggle('border-gray-700', !active);
+                chip.classList.toggle('hover:border-gray-500', !active);
+                const n = chip.querySelector('.rig-name');
+                n.classList.toggle('text-emerald-300', active);
+                n.classList.toggle('font-bold', active);
+                n.classList.toggle('text-gray-300', !active);
+            });
         }
 
         /* ============================================================
@@ -1559,10 +1797,13 @@
             });
         }
 
-        function selectPhotographer(id) {
+        /* `fromRig`: quando l'assetto arriva da un preset salvato, i valori
+           tecnici e lo scostamento del grafico li imposta chi chiama. */
+        function selectPhotographer(id, fromRig) {
             const m = photographers.find(p => p.id === id);
             if (!m) return;
             selectedMaster = m;
+            if (!fromRig) styleOverride = null;
 
             document.querySelectorAll('.photographer-btn').forEach(b =>
                 b.classList.toggle('selected', b.dataset.id === id));
@@ -1576,13 +1817,14 @@
             document.getElementById('spec-focus').innerText = m.valFocus;
             document.getElementById('spec-signature').innerText = m.signature;
 
-            setSelectValue('select-camera', m.valCam);
-            setSelectValue('select-light', m.valLight);
-            setSelectValue('select-film', m.valFilm);
-            document.getElementById('input-subject').value = m.defaultSubject;
-            document.getElementById('input-action').value = m.defaultAction;
-
-            if (engines[selectedEngine].ratios.includes(m.recAR)) setRatio(m.recAR);
+            if (!fromRig) {
+                setSelectValue('select-camera', m.valCam);
+                setSelectValue('select-light', m.valLight);
+                setSelectValue('select-film', m.valFilm);
+                document.getElementById('input-subject').value = m.defaultSubject;
+                document.getElementById('input-action').value = m.defaultAction;
+                if (engines[selectedEngine].ratios.includes(m.recAR)) setRatio(m.recAR);
+            }
 
             updateChart(m);
             updateAttrNote();
@@ -1600,21 +1842,35 @@
            CHART
            ============================================================ */
         function initChart() {
-            const ctx = document.getElementById('styleRadarChart').getContext('2d');
-            currentChart = new Chart(ctx, {
+            const canvas = document.getElementById('styleRadarChart');
+            currentChart = new Chart(canvas.getContext('2d'), {
                 type: 'radar',
                 data: {
-                    labels: ['Contrasto', 'Saturazione', 'Grana', 'Realismo', 'Messa in Scena'],
-                    datasets: [{
-                        data: [0,0,0,0,0],
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 2, pointRadius: 2,
-                        pointBackgroundColor: 'rgba(59, 130, 246, 1)'
-                    }]
+                    labels: STYLE_AXES.map(a => a.label),
+                    datasets: [
+                        {   // traccia grigia: dove sta il maestro, sempre visibile come riferimento
+                            label: 'maestro',
+                            data: [0,0,0,0,0],
+                            backgroundColor: 'rgba(148, 163, 184, 0.10)',
+                            borderColor: 'rgba(148, 163, 184, 0.55)',
+                            borderWidth: 1, borderDash: [4, 3],
+                            pointRadius: 0
+                        },
+                        {   // traccia attiva: quella che trascini
+                            label: 'attuale',
+                            data: [0,0,0,0,0],
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2, pointRadius: 5, pointHoverRadius: 7,
+                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                            pointBorderColor: '#fff', pointBorderWidth: 1.5
+                        }
+                    ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    events: [],
                     scales: {
                         r: {
                             angleLines: { color: 'rgba(156, 163, 175, 0.2)' },
@@ -1623,13 +1879,92 @@
                             min: 0, max: 100, ticks: { display: false, stepSize: 25 }
                         }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
                 }
             });
+            initChartDrag(canvas);
         }
+
         function updateChart(m) {
-            currentChart.data.datasets[0].data = m.stats;
+            const base = m ? m.stats : [0,0,0,0,0];
+            currentChart.data.datasets[0].data = base;
+            currentChart.data.datasets[1].data = styleOverride || base;
             currentChart.update();
+            const changed = !!styleOverride;
+            document.getElementById('chart-reset').classList.toggle('hidden', !changed);
+            document.getElementById('chart-hint').textContent = changed
+                ? 'Assetto modificato: la deviazione è scritta in coda al prompt.'
+                : 'Trascina i vertici per allontanarti dal maestro.';
+        }
+
+        /* ============================================================
+           TRASCINAMENTO DEL GRAFICO
+           Chart.js 3 non ha il drag: lo ricaviamo dalla geometria della
+           scala radiale, che sa convertire distanze dal centro in valori.
+           ============================================================ */
+        function initChartDrag(canvas) {
+            let dragging = false, axis = -1;
+
+            const axisAt = (x, y) => {
+                const r = currentChart.scales.r;
+                const px = x - r.xCenter, py = y - r.yCenter;
+                const plen = Math.hypot(px, py) || 1;
+                let best = 0, bestDot = -Infinity;
+                for (let i = 0; i < STYLE_AXES.length; i++) {
+                    const p = r.getPointPositionForValue(i, r.max);
+                    const ax = p.x - r.xCenter, ay = p.y - r.yCenter;
+                    const alen = Math.hypot(ax, ay) || 1;
+                    const dot = (px * ax + py * ay) / (plen * alen);
+                    if (dot > bestDot) { bestDot = dot; best = i; }
+                }
+                return best;
+            };
+
+            const valueAt = (x, y) => {
+                const r = currentChart.scales.r;
+                const d = Math.hypot(x - r.xCenter, y - r.yCenter);
+                const v = r.getValueForDistanceFromCenter(d);
+                return Math.max(0, Math.min(100, Math.round(v / 5) * 5));
+            };
+
+            const pos = e => {
+                const b = canvas.getBoundingClientRect();
+                return [e.clientX - b.left, e.clientY - b.top];
+            };
+
+            const apply = (x, y) => {
+                if (!selectedMaster) return;
+                if (!styleOverride) styleOverride = selectedMaster.stats.slice();
+                styleOverride[axis] = valueAt(x, y);
+                // se torna identico al maestro, l'assetto non è più "modificato"
+                if (styleOverride.every((v, i) => v === selectedMaster.stats[i])) styleOverride = null;
+                updateChart(selectedMaster);
+                buildPrompt();
+            };
+
+            canvas.addEventListener('pointerdown', e => {
+                if (!selectedMaster) return;
+                const [x, y] = pos(e);
+                dragging = true; axis = axisAt(x, y);
+                canvas.classList.add('dragging');
+                canvas.setPointerCapture(e.pointerId);
+                apply(x, y);
+            });
+            canvas.addEventListener('pointermove', e => {
+                if (!dragging) return;
+                e.preventDefault();
+                const [x, y] = pos(e);
+                apply(x, y);
+            });
+            ['pointerup', 'pointercancel'].forEach(ev => canvas.addEventListener(ev, () => {
+                dragging = false; canvas.classList.remove('dragging');
+            }));
+        }
+
+        function resetStyleOverride() {
+            styleOverride = null;
+            updateChart(selectedMaster);
+            buildPrompt();
         }
 
         /* ============================================================
@@ -1679,6 +2014,7 @@
             const it = (val('select-lang') || 'en') === 'it';
             document.getElementById('prompt-output').value = composePrompt(selectedEngine);
             updateOutputHint(it);
+            highlightActiveRig();
             if (isCompareOpen()) renderCompare();
         }
 
@@ -1729,6 +2065,7 @@
                 if (light) parts.push(light);
                 if (film) parts.push(film);
                 if (masterLayer) parts.push(masterLayer);
+                styleDeviations(it).forEach(d => parts.push(d));
                 p = parts.map((s, i) => i === 0 ? cap(s) : lower(s)).join(', ');
 
                 p += ' --ar ' + ar;
@@ -1770,6 +2107,14 @@
                 if (masterLayer) {
                     const sig = compact ? masterLayer.split(';').slice(0, 2).join(';').trim() : masterLayer;
                     S.push(cap(sig) + '.');
+                }
+
+                // Le deviazioni vanno subito dopo la firma e sono formulate come
+                // correzione esplicita: l'istruzione successiva vince su quella prima.
+                const dev = styleDeviations(it);
+                if (dev.length) {
+                    S.push((it ? 'Rispetto a questa base, correggi così: ' : 'Adjust that baseline as follows: ')
+                           + dev.join('; ') + '.');
                 }
 
                 if (overlay) {

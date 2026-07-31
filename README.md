@@ -53,6 +53,30 @@ peggiorano il risultato. L'app li emette solo dove servono.
 **Lingua.** Inglese (default, lessico tecnico più preciso) o italiano — i modelli 2026 lo
 reggono bene.
 
+## Allontanarsi dal maestro: il grafico si trascina
+
+Il radar dei cinque assi — contrasto, saturazione, grana, realismo, messa in scena — non è
+più decorativo: **trascini un vertice e il prompt cambia**. Il pentagono grigio tratteggiato
+resta lì a segnare dove sta il maestro, la forma blu è dove sei arrivato tu.
+
+La firma del maestro **non viene riscritta**: in coda al prompt compare una correzione
+esplicita — *"Rispetto a questa base, correggi così: contrasto più morbido, gamma compressa
+verso i grigi medi"*. Parti da Salgado, abbassi il contrasto, e ottieni Salgado meno duro
+senza perdere tutto il resto.
+
+Ogni asse ha due direzioni e due intensità. Sotto i 18 punti di scostamento non viene
+scritto nulla: un trascinamento involontario non sporca il prompt.
+
+## I tuoi assetti
+
+**Salva assetto attuale** mette da parte l'intera calibrazione — maestro, tono, ottica,
+apertura, luce, pellicola, formato, motore, citazione, lingua e la posizione dei cinque
+assi — sotto un nome che scegli tu. La riapri con un clic e cambi solo il soggetto.
+
+Soggetto e azione restano deliberatamente **fuori**: un assetto è un modo di guardare, non
+uno scatto. Il chip si illumina di verde quando i parametri correnti corrispondono a un
+assetto salvato, così vedi sempre se stai lavorando dentro o fuori da una tua calibrazione.
+
 ## Il cassetto delle immagini di riferimento
 
 Trascini le foto nel riquadro e assegni a ciascuna un ruolo — **stile**, **personaggio**,

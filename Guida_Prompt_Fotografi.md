@@ -75,6 +75,16 @@ lasciano niente da regolare. La versione estesa è più lunga da scrivere, ma co
 
 Se il risultato non convince, qui sai esattamente quale frase togliere.
 
+**E se il maestro ti serve solo come punto di partenza?** Correggilo esplicitamente, invece
+di riscriverlo. I modelli 2026 gestiscono bene le istruzioni successive: l'ultima vince.
+
+> *[descrizione completa dello stile] **Rispetto a questa base, correggi così:** contrasto
+> più morbido e gamma compressa verso i grigi medi; grana grossa e marcata.*
+
+È più lungo di un aggettivo cambiato a mano, ma è reversibile: la correzione resta una riga
+separata che puoi togliere. Nell'Atelier questa riga la scrive il grafico a cinque assi,
+trascinando i vertici.
+
 ---
 
 ## 4. Riferimenti per immagine: la vera novità
