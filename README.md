@@ -23,6 +23,17 @@ forma che il motore di destinazione capisce davvero. Tre grammatiche diverse —
 | **Nano Banana Pro** (`gemini-3-pro-image`) | prosa lunga e stratificata | qualità studio, 4K, grounding su Search |
 | **Midjourney v8** | keyword dense + flag | l'unico che usa ancora `--ar`, `--no`, `--sref`, `--oref` |
 
+## La vista comparativa
+
+Il pulsante **Confronta i quattro motori** apre lo stesso scatto scritto nelle quattro
+grammatiche, affiancate, ciascuna con il conteggio parole e il proprio pulsante di copia.
+Si aggiorna dal vivo mentre tocchi i parametri.
+
+È il modo più rapido per vedere che le differenze non sono cosmetiche: Midjourney riceve
+keyword separate da virgole e chiude con `--ar`, ChatGPT riceve prosa e il formato scritto
+a parole, Nano Banana 2 riceve una versione volutamente più corta — perché sui prompt
+lunghi perde i vincoli finali, mentre il Pro li tiene tutti.
+
 ## Le tre scelte che contano
 
 **Motore di destinazione.** Non è un dettaglio cosmetico: `--ar` e `--no` funzionano

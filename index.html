@@ -245,6 +245,25 @@
         </div>
     </div>
 
+    <!-- Vista comparativa -->
+    <div id="compare-modal" class="modal fixed inset-0 z-[100] flex items-start justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl w-full max-w-6xl modal-content border border-gray-100 dark:border-gray-700 my-auto">
+            <div class="flex justify-between items-start gap-4 p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700">
+                <div>
+                    <h3 class="text-lg font-bold serif dark:text-white">Lo stesso scatto, quattro grammatiche</h3>
+                    <p id="compare-sub" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="closeCompare()" aria-label="Chiudi" class="text-gray-400 hover:text-black dark:hover:text-white text-2xl leading-none px-3 py-2 -mr-2 -mt-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0">&times;</button>
+            </div>
+            <div id="compare-grid" class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+            <p class="px-5 sm:px-6 pb-5 sm:pb-6 text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+                Gli stessi parametri, scritti come ciascun motore li capisce. I flag esistono solo su
+                Midjourney; su Gemini il formato è un parametro dell'app, non testo. Le differenze di
+                lunghezza sono volute: Nano Banana 2 perde vincoli sui prompt lunghi, il Pro no.
+            </p>
+        </div>
+    </div>
+
     <!-- Hero Header -->
     <header class="bg-gradient-to-b from-white to-gray-50 dark:from-darkbg dark:to-darkbg/95 py-20 transition-colors duration-300">
         <div class="max-w-4xl mx-auto px-4 text-center">
@@ -363,6 +382,9 @@
                             <button onclick="setEngine('mj')" id="btn-eng-mj" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">Midjourney&nbsp;v8</button>
                         </div>
                         <p id="engine-note" class="text-[10px] text-gray-500 mt-3 leading-relaxed"></p>
+                        <button onclick="openCompare()" class="mt-3 w-full text-[11px] font-bold uppercase tracking-wider text-indigo-300 hover:text-white border border-indigo-500/40 hover:border-indigo-400 hover:bg-indigo-500/10 rounded-lg py-2.5 transition-colors">
+                            Confronta i quattro motori
+                        </button>
                     </div>
 
                     <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
@@ -1099,6 +1121,15 @@
             const btn = document.getElementById('mobile-menu-btn');
             const menu = document.getElementById('mobile-menu');
             if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+
+            // Esc e clic sullo sfondo chiudono i modali.
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') { closeCompare(); closeSettings(); }
+            });
+            ['compare-modal', 'settings-modal'].forEach(id => {
+                const m = document.getElementById(id);
+                m.addEventListener('mousedown', e => { if (e.target === m) m.classList.remove('active'); });
+            });
         });
 
         /* ============================================================
@@ -1257,6 +1288,73 @@
             document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('selected'));
             document.getElementById('btn-tone-' + t).classList.add('selected');
             buildPrompt();
+        }
+
+        /* ============================================================
+           VISTA COMPARATIVA
+           Quattro prompt affiancati dagli stessi parametri: rende visibile
+           che i motori non condividono piu' la stessa grammatica.
+           ============================================================ */
+        function isCompareOpen() {
+            return document.getElementById('compare-modal').classList.contains('active');
+        }
+        function openCompare() {
+            renderCompare();
+            document.getElementById('compare-modal').classList.add('active');
+        }
+        function closeCompare() {
+            document.getElementById('compare-modal').classList.remove('active');
+        }
+
+        function renderCompare() {
+            const grid = document.getElementById('compare-grid');
+            grid.innerHTML = '';
+
+            const subject = val('input-subject') || '[soggetto]';
+            document.getElementById('compare-sub').textContent =
+                (selectedMaster ? selectedMaster.name + ' — ' : '') + subject;
+
+            Object.entries(engines).forEach(([id, eng]) => {
+                const text = composePrompt(id);
+                const ar = eng.ratios.includes(selectedAR) ? selectedAR : eng.ratios[0];
+                const words = text.trim().split(/\s+/).length;
+                const current = id === selectedEngine;
+
+                const card = document.createElement('div');
+                card.className = 'rounded-2xl border overflow-hidden flex flex-col ' +
+                    (current ? 'border-indigo-400 dark:border-indigo-500 ring-1 ring-indigo-400/30'
+                             : 'border-gray-200 dark:border-gray-700');
+
+                const head = document.createElement('div');
+                head.className = 'flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700';
+                head.innerHTML =
+                    '<div class="min-w-0">' +
+                        '<p class="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">' + escapeHtml(eng.label) +
+                            (current ? ' <span class="text-indigo-500 font-normal">· attivo</span>' : '') + '</p>' +
+                        '<p class="text-[10px] text-gray-400 mt-0.5">' +
+                            (eng.style === 'keywords' ? 'keyword + flag' : eng.style === 'prose-compact' ? 'prosa condensata' : 'prosa estesa') +
+                            ' · ' + words + ' parole · ' + ar + '</p>' +
+                    '</div>';
+
+                const copy = document.createElement('button');
+                copy.className = 'text-[10px] font-bold uppercase tracking-wide bg-black dark:bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-blue-700 transition-colors shrink-0';
+                copy.textContent = 'Copia';
+                copy.onclick = async () => {
+                    try { await navigator.clipboard.writeText(text); copy.textContent = 'Copiato ✓'; }
+                    catch { copy.textContent = 'Non riuscito'; }
+                    saveToHistory(text);
+                    setTimeout(() => { copy.textContent = 'Copia'; }, 1600);
+                };
+                head.appendChild(copy);
+
+                const body = document.createElement('p');
+                body.className = 'p-4 font-mono text-[11px] leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words flex-grow max-h-64 overflow-y-auto custom-scrollbar';
+                body.textContent = text;
+
+                card.appendChild(head);
+                card.appendChild(body);
+                grid.appendChild(card);
+            });
         }
 
         /* ============================================================
@@ -1553,8 +1651,8 @@
         /* Traduce il cassetto delle immagini in una frase esplicita: il modello
            va detto quante immagini riceve e con che ruolo, altrimenti le tratta
            tutte allo stesso modo. */
-        function buildRefSentence(it) {
-            if (engines[selectedEngine].refKind !== 'files' || !refImages.length) return '';
+        function buildRefSentence(it, engineId) {
+            if (engines[engineId].refKind !== 'files' || !refImages.length) return '';
             const c = refCounts();
             const words = {
                 style:       [n => n === 1 ? 'un riferimento di stile'       : n + ' riferimenti di stile',
@@ -1578,9 +1676,22 @@
         }
 
         function buildPrompt() {
-            const eng  = engines[selectedEngine];
+            const it = (val('select-lang') || 'en') === 'it';
+            document.getElementById('prompt-output').value = composePrompt(selectedEngine);
+            updateOutputHint(it);
+            if (isCompareOpen()) renderCompare();
+        }
+
+        /* Il prompt dipende solo dai parametri e dal motore, mai dallo stato
+           dell'interfaccia: e' questo che permette di generarne quattro in una
+           volta sola per la vista comparativa. */
+        function composePrompt(engineId) {
+            const eng  = engines[engineId];
             const lang = val('select-lang') || 'en';
             const it   = lang === 'it';
+
+            // Il rapporto scelto puo' non esistere sul motore che stiamo componendo.
+            const ar = eng.ratios.includes(selectedAR) ? selectedAR : eng.ratios[0];
 
             const subject  = val('input-subject') || (it ? '[Soggetto]' : '[subject]');
             const action   = val('input-action');
@@ -1620,7 +1731,7 @@
                 if (masterLayer) parts.push(masterLayer);
                 p = parts.map((s, i) => i === 0 ? cap(s) : lower(s)).join(', ');
 
-                p += ' --ar ' + selectedAR;
+                p += ' --ar ' + ar;
                 if (srefUrl) p += ' --sref ' + srefUrl;
                 if (orefUrl) p += ' --oref ' + orefUrl;
                 if (document.getElementById('merge-negative').checked && selectedMaster) {
@@ -1632,7 +1743,7 @@
                 const compact = eng.style === 'prose-compact';
                 const S = [];
 
-                const refSentence = buildRefSentence(it);
+                const refSentence = buildRefSentence(it, engineId);
                 if (refSentence) S.push(refSentence);
 
                 // Frase 1: soggetto e azione
@@ -1652,9 +1763,13 @@
                     S.push((it ? 'Luce e resa: ' : 'Lit and rendered as ') + matter.join('; ') + '.');
                 }
 
-                // Frase 4: firma del maestro (omessa in modalità compatta se già molto lungo)
-                if (masterLayer && !(compact && S.join(' ').length > 380)) {
-                    S.push(cap(masterLayer) + '.');
+                // Frase 4: firma del maestro. In modalità compatta la firma viene
+                // ridotta alle prime due clausole: Nano Banana 2 perde i vincoli
+                // finali quando il prompt si allunga, quindi meglio pochi tratti
+                // tenuti che molti dichiarati e ignorati.
+                if (masterLayer) {
+                    const sig = compact ? masterLayer.split(';').slice(0, 2).join(';').trim() : masterLayer;
+                    S.push(cap(sig) + '.');
                 }
 
                 if (overlay) {
@@ -1663,21 +1778,21 @@
                         : 'The text "' + overlay + '" appears in the image, clearly rendered and legible.');
                 }
 
-                if (eng.style !== 'prose-compact' || S.length < 6) {
-                    S.push(it
-                        ? 'Una fotografia vera, non un rendering: materiali con la loro texture, imperfezioni naturali, granulosità della pellicola.'
-                        : 'A real photograph, not a render: authentic material texture, natural imperfections, visible film grain.');
-                }
+                // La riga anti-plastica: estesa dove c'è spazio, essenziale dove no.
+                S.push(compact
+                    ? (it ? 'Fotografia vera, con grana e imperfezioni.'
+                          : 'A real photograph, with grain and imperfections.')
+                    : (it ? 'Una fotografia vera, non un rendering: materiali con la loro texture, imperfezioni naturali, granulosità della pellicola.'
+                          : 'A real photograph, not a render: authentic material texture, natural imperfections, visible film grain.'));
 
-                if (selectedEngine === 'chatgpt') {
-                    S.push(it ? 'Formato ' + selectedAR + '.' : 'Aspect ratio ' + selectedAR + '.');
+                if (engineId === 'chatgpt') {
+                    S.push(it ? 'Formato ' + ar + '.' : 'Aspect ratio ' + ar + '.');
                 }
 
                 p = S.join(' ');
             }
 
-            document.getElementById('prompt-output').value = p;
-            updateOutputHint(it);
+            return p;
         }
 
         /* Soggetto e azione li scrive l'utente: restano nella sua lingua
