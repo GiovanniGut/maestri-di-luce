@@ -1,41 +1,81 @@
-# **📸 Maestri di Luce | Atelier del Prompt AI**
+# 📸 Maestri di Luce | Atelier del Prompt AI
 
-"La fotografia è una risposta alla vita." — **Dorothea Lange**
+> "La fotografia è una risposta alla vita." — **Dorothea Lange**
 
-**Maestri di Luce** è una camera oscura digitale progettata per il **ragionamento visivo**. È uno strumento per coach, formatori e creativi che vogliono superare la "Tag Soup" (liste casuali di keyword) per assumere il ruolo di **Direttore Creativo** nel dialogo con l'Intelligenza Artificiale.
+**Maestri di Luce** è una camera oscura digitale per il ragionamento visivo: uno strumento
+che traduce il DNA tecnico di 16 grandi fotografi in prompt pronti per i generatori di
+immagini del 2026.
 
-## **🏛️ Architettura del Progetto**
+🔗 **[Apri l'Atelier](https://giovannigut.github.io/maestri-di-luce/)**
 
-Il progetto si basa sulla sintesi tra la tecnica fotografica classica e la potenza di calcolo di **Google Gemini**. L'interfaccia emula il DNA visivo di 16 grandi maestri, gestendo variabili complesse come focali, emulsioni e schemi di luce.
+---
 
-### **📚 Risorse Fondamentali**
+## Cosa fa
 
-Per padroneggiare lo strumento, consulta i pilastri documentali inclusi:
+Scegli un maestro, definisci il soggetto in italiano, e l'app costruisce il prompt nella
+forma che il motore di destinazione capisce davvero. Tre grammatiche diverse — perché nel
+2026 i generatori non parlano più la stessa lingua.
 
-1. [**Guida ai Prompt d'Autore**](./Guida_Prompt_Fotografi.md): Manuale sulla grammatica del prompt e analisi stilistica.
-2. [**Infografica Interattiva**](https://giovannigut.github.io/maestri-di-luce/infographic_atelier.html): Mappa operativa dell'anatomia del prompt.
+| Motore | Cosa riceve | Note |
+|---|---|---|
+| **ChatGPT Images 2.0** (`gpt-image-2`) | prosa descrittiva, formato a parole | reasoning nativo, fino a 8 immagini coerenti, 2K |
+| **Nano Banana 2** (`gemini-3.1-flash-image`) | prosa **condensata** | veloce ed economico; perde vincoli sui prompt lunghi |
+| **Nano Banana Pro** (`gemini-3-pro-image`) | prosa lunga e stratificata | qualità studio, 4K, grounding su Search |
+| **Midjourney v8** | keyword dense + flag | l'unico che usa ancora `--ar`, `--no`, `--sref`, `--oref` |
 
-## **✨ Caratteristiche Principali**
+## Le tre scelte che contano
 
-* **Visual DNA**: Gradienti cromatici dinamici per ogni fotografo.
-* **Controllo Registico**: Gestione di inquadratura, angolazione e apertura ($f/stop$).
-* **Blending Intelligente**: Supporto per immagini di riferimento (Drag & Drop o URL).
-* **Ottimizzazione AI**: Integrazione nativa con API Gemini per il perfezionamento tecnico.
-* **Privacy First**: API Key e cronologia salvate localmente nel browser.
+**Motore di destinazione.** Non è un dettaglio cosmetico: `--ar` e `--no` funzionano
+*solo* su Midjourney. Su ChatGPT e Gemini finiscono nel prompt come testo letterale e
+peggiorano il risultato. L'app li emette solo dove servono.
 
-## **🚀 Installazione Rapida**
+**Citazione del maestro.** Tre livelli, con il secondo come default:
 
-1. **GitHub Pages**: Carica i file e attiva la pubblicazione da Settings > Pages.
-2. **Configurazione API**:
-   * Ottieni una chiave su [Google AI Studio](https://aistudio.google.com/app/apikey).
-   * Inseriscila nell'icona ingranaggio (**⚙️**) dell'Atelier.
-3. **Flusso di Lavoro**: Scegli un maestro, definisci il soggetto in italiano e clicca su **Ottimizza**.
+1. **Solo tecnica** — nessun riferimento all'autore.
+2. **Grammatica del maestro** — il nome resta fuori, ma la sua firma visiva viene scritta
+   per esteso. È l'opzione più controllabile: se il risultato non convince, sai quale
+   parametro toccare.
+3. **Citazione esplicita** — il nome entra nel prompt. L'app avvisa quando il maestro è
+   vivente e il target è ChatGPT, che per policy rifiuta i riferimenti a stili di artisti
+   viventi.
 
-## **🛠️ Stack Tecnologico**
+**Lingua.** Inglese (default, lessico tecnico più preciso) o italiano — i modelli 2026 lo
+reggono bene.
 
-* **Frontend**: HTML5, Tailwind CSS.
-* **Logic**: JavaScript (ES6+), Chart.js.
-* **AI Engine**: Google Gemini API.
+## Niente negative prompt
+
+ChatGPT e Gemini non supportano i negative prompt, e scrivere *"no plastic skin"* nel
+testo rischia di evocare proprio ciò che vuoi escludere. Per questo ogni maestro ha una
+**firma visiva in positivo**: non *"niente pelle di plastica"* ma *"pelle con pori
+visibili, lentiggini e linee sottili"*. Le negazioni restano disponibili solo in modalità
+Midjourney, dove `--no` funziona davvero.
+
+## Chiave API (opzionale)
+
+L'app funziona come generatore di prompt senza alcuna configurazione: costruisci, copi,
+incolli. Se vuoi anche il pulsante **Ottimizza** — che riscrive il prompt in prosa
+descrittiva — puoi inserire una chiave di **Anthropic (Claude)**, **Google (Gemini)** o
+**OpenAI**. La guida è dentro l'app, nell'icona ⚙️.
+
+> ⚠️ **Se una tua chiave Gemini ha smesso di funzionare, non è colpa tua.** Google ha
+> sostituito le vecchie *standard key* con le *auth key*: dal 19 giugno 2026 quelle non
+> ristrette vengono rifiutate, e da settembre 2026 lo saranno tutte. Creane una nuova su
+> [AI Studio](https://aistudio.google.com/apikey) — quelle generate oggi sono già del tipo
+> corretto.
+
+La chiave resta nel `localStorage` del tuo browser e viaggia solo verso il fornitore che
+hai scelto. Trattandosi di una pagina pubblica, usa una chiave dedicata con un tetto di
+spesa basso. Il pulsante **Cancella chiave** la rimuove del tutto.
+
+## 📚 Risorse
+
+1. [**Guida ai Prompt d'Autore**](./Guida_Prompt_Fotografi.md) — la grammatica del prompt nel 2026
+2. [**Infografica Interattiva**](https://giovannigut.github.io/maestri-di-luce/infographic_atelier.html) — anatomia del prompt
+
+## 🛠️ Stack
+
+Pagina statica singola. HTML5, Tailwind CSS, JavaScript ES6+, Chart.js.
+Nessuna build, nessun backend, nessuna dipendenza da installare.
 
 ---
 

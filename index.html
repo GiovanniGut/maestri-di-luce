@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'media', 
+            darkMode: 'media',
             theme: {
                 extend: {
                     colors: {
@@ -28,23 +28,21 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .serif { font-family: 'Playfair Display', serif; }
-        
+
         .chart-container { position: relative; height: 300px; width: 100%; }
-        
+
         /* UI Polish */
         .btn-hover { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-hover:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        
-        /* Active States */
-        .ar-btn.selected, .tone-btn.selected {
-            background-color: #111827; color: white; border-color: #111827;
+
+        /* Active States — questi pulsanti vivono solo nella sezione
+           sempre scura del costruttore, quindi non seguono il tema. */
+        .ar-btn.selected, .tone-btn.selected, .engine-btn.selected, .attr-btn.selected {
+            background-color: #2563eb; color: #fff; border-color: #3b82f6;
+            box-shadow: 0 0 0 1px rgba(59,130,246,.4), 0 4px 14px rgba(37,99,235,.25);
         }
-        @media (prefers-color-scheme: dark) {
-            .ar-btn.selected, .tone-btn.selected {
-                background-color: #3b82f6; color: white; border-color: #3b82f6;
-            }
-        }
-        
+        .ar-btn[disabled] { opacity: 0.25; cursor: not-allowed; }
+
         /* Photographer List Item */
         .photographer-btn {
             transition: all 0.2s ease;
@@ -54,16 +52,16 @@
             background-color: #f9fafb;
         }
         .photographer-btn.selected {
-            background-color: #f3f4f6; 
+            background-color: #f3f4f6;
             border-left-color: #111827;
             padding-left: 1rem; /* Subtle shift */
         }
-        
+
         /* Dark Mode List Item */
         @media (prefers-color-scheme: dark) {
             .photographer-btn:hover { background-color: #1e293b; }
             .photographer-btn.selected {
-                background-color: #1e293b; 
+                background-color: #1e293b;
                 border-left-color: #60a5fa;
             }
         }
@@ -74,19 +72,24 @@
             width: 14px; height: 14px; animation: spin 1s linear infinite; display: inline-block;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
+
         /* Modal & Preview */
         .modal { transition: opacity 0.2s ease, visibility 0.2s; opacity: 0; visibility: hidden; }
         .modal.active { opacity: 1; visibility: visible; }
         .modal-content { transform: scale(0.95); transition: transform 0.2s ease; }
         .modal.active .modal-content { transform: scale(1); }
-        
+
         #ratio-preview-box { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .style-preview { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+
+        details.guide > summary { cursor: pointer; list-style: none; }
+        details.guide > summary::-webkit-details-marker { display: none; }
+        details.guide > summary::before { content: '▸ '; }
+        details.guide[open] > summary::before { content: '▾ '; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-white text-slate-900 dark:bg-darkbg dark:text-slate-100 transition-colors duration-300">
@@ -99,7 +102,7 @@
                 <div class="flex items-center gap-1.5">
                     <span class="text-lg font-bold serif tracking-tight">Atelier del Prompt <span class="text-blue-600 text-xs align-top font-sans font-bold">AI</span></span>
                 </div>
-                
+
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center gap-8">
                     <button onclick="scrollToSection('gallery')" class="text-sm font-medium text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors">I Maestri</button>
@@ -108,13 +111,13 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </button>
                 </div>
-                
+
                 <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center gap-4">
-                    <button onclick="openSettings()" class="text-gray-400">
+                <div class="md:hidden flex items-center gap-1 -mr-2">
+                    <button onclick="openSettings()" aria-label="Impostazioni" class="text-gray-400 p-2.5 rounded-lg active:bg-gray-100 dark:active:bg-gray-800">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </button>
-                    <button id="mobile-menu-btn" class="text-gray-600 dark:text-white focus:outline-none">
+                    <button id="mobile-menu-btn" aria-label="Menu" class="text-gray-600 dark:text-white focus:outline-none p-2.5 rounded-lg active:bg-gray-100 dark:active:bg-gray-800">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -132,27 +135,111 @@
     </nav>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="modal fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl p-6 w-full max-w-md modal-content border border-gray-100 dark:border-gray-700">
+    <!-- items-start + my-auto: centra quando il contenuto ci sta, e non taglia
+         la parte alta quando la guida è aperta e il modale supera lo schermo. -->
+    <div id="settings-modal" class="modal fixed inset-0 z-[100] flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-lg modal-content border border-gray-100 dark:border-gray-700 my-auto">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold serif dark:text-white">Motore AI</h3>
-                <button onclick="closeSettings()" class="text-gray-400 hover:text-black dark:hover:text-white text-2xl leading-none">&times;</button>
+                <h3 class="text-lg font-bold serif dark:text-white">Motore di ottimizzazione</h3>
+                <button onclick="closeSettings()" aria-label="Chiudi" class="text-gray-400 hover:text-black dark:hover:text-white text-2xl leading-none -mr-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">&times;</button>
             </div>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
+                Questa chiave serve <b>solo</b> al pulsante &laquo;Ottimizza&raquo;, che riscrive il prompt in prosa.
+                L'app funziona benissimo anche senza: costruisci il prompt e lo copi.
+            </p>
+
             <div class="space-y-5">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Gemini API Key</label>
-                    <input type="password" id="api-key-input" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none dark:bg-gray-800 dark:text-white transition-all" placeholder="Incolla la tua chiave qui...">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Modello</label>
-                    <select id="model-select" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none transition-all">
-                        <option value="gemini-2.5-flash-preview-09-2025">Gemini 2.5 Flash (Consigliato)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Fornitore</label>
+                    <select id="provider-select" onchange="onProviderChange()" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none transition-all">
+                        <option value="anthropic">Anthropic (Claude)</option>
+                        <option value="google">Google (Gemini)</option>
+                        <option value="openai">OpenAI (ChatGPT)</option>
                     </select>
                 </div>
-                <div class="flex justify-end pt-2">
-                    <button onclick="saveSettings()" class="bg-black dark:bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-blue-700 btn-hover w-full sm:w-auto">Salva</button>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Modello</label>
+                    <select id="model-select" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none transition-all"></select>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-end mb-1.5">
+                        <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Chiave API</label>
+                        <a id="key-link" href="#" target="_blank" rel="noopener" class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline">Dove la trovo?</a>
+                    </div>
+                    <input type="password" id="api-key-input" autocomplete="off" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none dark:bg-gray-800 dark:text-white transition-all" placeholder="Incolla la tua chiave qui...">
+                    <p id="key-status" class="text-[10px] mt-1.5 text-gray-400"></p>
+                </div>
+
+                <!-- GUIDA -->
+                <details class="guide bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                    <summary class="text-xs font-bold text-gray-700 dark:text-gray-200 select-none">Guida semplice: cos'è una chiave API e come si ottiene</summary>
+                    <div class="mt-4 space-y-4 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">
+                        <p>
+                            Una <b>chiave API</b> è una password lunga che permette a questa pagina di parlare
+                            direttamente con l'intelligenza artificiale, senza passare dal sito di ChatGPT o Gemini.
+                            Si paga a consumo (pochi centesimi), separatamente dall'abbonamento mensile.
+                            <b>Se non ne hai una, salta pure questa parte:</b> l'app costruisce comunque il prompt,
+                            tu lo copi e lo incolli dove preferisci.
+                        </p>
+
+                        <div>
+                            <p class="font-bold text-gray-800 dark:text-gray-100 mb-1">Google / Gemini</p>
+                            <p>
+                                Vai su <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 underline">aistudio.google.com/apikey</a>,
+                                accedi con il tuo account Google e clicca <b>Create API key</b>. Copia la stringa che appare.
+                            </p>
+                            <p class="mt-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-amber-200">
+                                <b>Attenzione, questo è cambiato nel 2026.</b> Google ha sostituito le vecchie chiavi
+                                (&laquo;standard key&raquo;) con un nuovo tipo (&laquo;auth key&raquo;). Dal 19 giugno 2026 le vecchie
+                                chiavi senza restrizioni vengono rifiutate, e da settembre 2026 saranno rifiutate tutte.
+                                <b>Se una tua chiave Gemini ha smesso di funzionare, è quasi certamente questo:</b>
+                                non provare a ripararla, creane una nuova con il pulsante qui sopra. Quelle create oggi
+                                sono già del tipo giusto.
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="font-bold text-gray-800 dark:text-gray-100 mb-1">Anthropic / Claude</p>
+                            <p>
+                                Vai su <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 underline">console.anthropic.com</a>,
+                                crea un account, carica un piccolo credito e clicca <b>Create Key</b>.
+                                È il fornitore che scrive meglio i prompt, ed è quello consigliato qui.
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="font-bold text-gray-800 dark:text-gray-100 mb-1">OpenAI / ChatGPT</p>
+                            <p>
+                                Vai su <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 underline">platform.openai.com/api-keys</a>
+                                e clicca <b>Create new secret key</b>. Serve un credito sul conto &laquo;platform&raquo;,
+                                che è separato dall'abbonamento ChatGPT Plus.
+                            </p>
+                            <p class="mt-2 text-gray-500 dark:text-gray-400">
+                                Nota tecnica: OpenAI a volte blocca le chiamate fatte direttamente da una pagina web.
+                                Se ricevi un errore di rete con OpenAI mentre gli altri due funzionano, è questo il motivo —
+                                usa Claude o Gemini.
+                            </p>
+                        </div>
+
+                        <div class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
+                            <p class="font-bold text-gray-800 dark:text-gray-100 mb-1">Sulla sicurezza, in breve</p>
+                            <p>
+                                La chiave resta salvata <b>solo dentro il tuo browser</b>, su questo computer.
+                                Non viene inviata a me né a nessun altro: parte solo verso il fornitore che hai scelto.
+                                Detto questo, questa è una pagina web pubblica: usa una chiave dedicata, con un tetto
+                                di spesa basso, e non usarla su un computer condiviso. Il pulsante &laquo;Cancella chiave&raquo;
+                                qui sotto la rimuove del tutto.
+                            </p>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="flex flex-col sm:flex-row justify-between gap-3 pt-1">
+                    <button onclick="clearKey()" class="text-xs text-red-500 hover:text-red-600 font-medium px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Cancella chiave</button>
+                    <button onclick="saveSettings()" class="bg-black dark:bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 dark:hover:bg-blue-700 btn-hover">Salva</button>
                 </div>
             </div>
         </div>
@@ -167,33 +254,34 @@
             </p>
             <div class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Sistema Zonale & Ottiche Reali Attivi</span>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Aggiornato 2026 &middot; ChatGPT Images 2.0 &middot; Nano Banana &middot; Midjourney v8</span>
             </div>
         </div>
     </header>
 
     <main class="flex-grow">
-        
+
         <!-- SECTION 1: THE GALLERY -->
         <section id="gallery" class="py-16 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-darkbg transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                
+
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                     <!-- Sidebar List -->
                     <div class="lg:col-span-3">
                         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">L'Archivio (16)</h3>
-                        <div id="photographer-list" class="space-y-2 h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-10">
+                        <div id="photographer-list" class="space-y-2 h-[340px] lg:h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-10">
                             <!-- JS Generated -->
                         </div>
                     </div>
 
                     <!-- Main Dashboard -->
                     <div class="lg:col-span-9 bg-white dark:bg-darkcard rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 p-8 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-10 transition-colors duration-300">
-                        
+
                         <!-- Radar Chart & Info -->
                         <div class="flex flex-col justify-between h-full">
                             <div>
-                                <h2 id="master-name" class="text-3xl md:text-4xl font-bold serif text-gray-900 dark:text-white mb-6">Seleziona Autore</h2>
+                                <h2 id="master-name" class="text-3xl md:text-4xl font-bold serif text-gray-900 dark:text-white mb-2">Seleziona Autore</h2>
+                                <p id="master-status" class="text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-6">&nbsp;</p>
                                 <!-- DESCRIPTION BOX -->
                                 <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 mb-8 border border-gray-100 dark:border-gray-700">
                                     <p id="master-desc" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -226,10 +314,10 @@
                                     <span id="spec-focus" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
                                 </div>
                             </div>
-                            
-                            <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
-                                <p class="text-[10px] font-bold text-blue-500 uppercase mb-2">Negative Context (Auto)</p>
-                                <p id="spec-negative" class="text-xs text-blue-900 dark:text-blue-200 font-mono break-words leading-relaxed opacity-80">
+
+                            <div class="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+                                <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-2">Firma visiva (in positivo)</p>
+                                <p id="spec-signature" class="text-xs text-emerald-900 dark:text-emerald-200 break-words leading-relaxed">
                                     -
                                 </p>
                             </div>
@@ -243,51 +331,83 @@
         <!-- SECTION 2: PROMPT BUILDER -->
         <section id="builder" class="py-16 bg-[#111111] text-gray-300 border-t border-gray-800 scroll-mt-0">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                
-                <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-gray-800 pb-8 gap-6">
+
+                <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-gray-800 pb-8 gap-6">
                     <div>
                         <h2 class="text-3xl md:text-4xl font-bold text-white serif mb-2">Camera Oscura AI</h2>
                         <p class="text-sm text-gray-500">I parametri sono pre-configurati. Definisci il soggetto.</p>
                     </div>
-                    
+
                     <div class="flex flex-col md:flex-row items-end md:items-center gap-4">
                          <button onclick="resetBuilder()" class="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors px-3 py-2 rounded hover:bg-white/5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             Nuovo Scatto
                         </button>
-                        
+
                         <div class="flex bg-gray-900 p-1.5 rounded-xl border border-gray-700">
                             <button onclick="setTone('default')" id="btn-tone-default" class="tone-btn px-4 py-2 text-xs rounded-lg font-medium transition-all selected">Originale</button>
-                            <button onclick="setTone('bw')" id="btn-tone-bw" class="tone-btn px-4 py-2 text-xs rounded-lg font-medium transition-all hover:text-white">B&N</button>
+                            <button onclick="setTone('bw')" id="btn-tone-bw" class="tone-btn px-4 py-2 text-xs rounded-lg font-medium transition-all hover:text-white">B&amp;N</button>
                             <button onclick="setTone('color')" id="btn-tone-color" class="tone-btn px-4 py-2 text-xs rounded-lg font-medium transition-all hover:text-white">Colore</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- DESTINAZIONE / CITAZIONE / LINGUA -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+                    <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
+                        <label class="block text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3">Motore di destinazione</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setEngine('chatgpt')" id="btn-eng-chatgpt" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">ChatGPT&nbsp;2.0</button>
+                            <button onclick="setEngine('nb2')" id="btn-eng-nb2" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">Nano&nbsp;Banana&nbsp;2</button>
+                            <button onclick="setEngine('nbpro')" id="btn-eng-nbpro" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">Nano&nbsp;Banana&nbsp;Pro</button>
+                            <button onclick="setEngine('mj')" id="btn-eng-mj" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">Midjourney&nbsp;v8</button>
+                        </div>
+                        <p id="engine-note" class="text-[10px] text-gray-500 mt-3 leading-relaxed"></p>
+                    </div>
+
+                    <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
+                        <label class="block text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-3">Citazione del maestro</label>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="setAttribution('tech')" id="btn-attr-tech" class="attr-btn py-2.5 px-3 border border-gray-700 rounded-lg text-[11px] text-left hover:bg-gray-800 transition-colors">Solo tecnica</button>
+                            <button onclick="setAttribution('grammar')" id="btn-attr-grammar" class="attr-btn py-2.5 px-3 border border-gray-700 rounded-lg text-[11px] text-left hover:bg-gray-800 transition-colors">Grammatica del maestro</button>
+                            <button onclick="setAttribution('name')" id="btn-attr-name" class="attr-btn py-2.5 px-3 border border-gray-700 rounded-lg text-[11px] text-left hover:bg-gray-800 transition-colors">Citazione esplicita</button>
+                        </div>
+                        <p id="attr-note" class="text-[10px] text-gray-500 mt-3 leading-relaxed"></p>
+                    </div>
+
+                    <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800 flex flex-col">
+                        <label class="block text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-3">Lingua del prompt</label>
+                        <select id="select-lang" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-xs text-gray-200 outline-none focus:border-cyan-500 transition-all">
+                            <option value="en">Inglese (massima precisione tecnica)</option>
+                            <option value="it">Italiano (i modelli 2026 lo reggono bene)</option>
+                        </select>
+                        <p class="text-[10px] text-gray-500 mt-3 leading-relaxed">
+                            Il lessico fotografico (focali, emulsioni, schemi di luce) resta comunque in inglese:
+                            è la lingua in cui i modelli lo hanno imparato.
+                        </p>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    
+
                     <!-- INPUT COLUMN -->
                     <div class="space-y-8">
-                        
+
                         <!-- 1. Visualizer & Format -->
                         <div class="bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
                             <div class="flex justify-between items-center mb-4">
                                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Inquadratura</label>
-                                <span id="ar-label" class="text-xs font-mono text-cyan-400">1:1</span>
+                                <span id="ar-label" class="text-xs font-mono text-cyan-400">3:2</span>
                             </div>
                             <div class="flex gap-6 items-center">
                                 <!-- AR Buttons -->
-                                <div class="grid grid-cols-4 gap-2 flex-grow">
-                                    <button onclick="setRatio('1:1')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">1:1</button>
-                                    <button onclick="setRatio('3:2')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">3:2</button>
-                                    <button onclick="setRatio('4:5')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">4:5</button>
-                                    <button onclick="setRatio('16:9')" class="ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors">16:9</button>
-                                </div>
+                                <div id="ar-grid" class="grid grid-cols-4 gap-2 flex-grow"></div>
                                 <!-- Visual Preview -->
                                 <div class="flex items-center justify-center w-20 h-20 bg-black rounded-xl border border-gray-800 shrink-0">
-                                    <div id="ratio-preview-box" class="bg-gray-700 border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)]" style="width: 40px; height: 40px;"></div>
+                                    <div id="ratio-preview-box" class="bg-gray-700 border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)]" style="width: 48px; height: 32px;"></div>
                                 </div>
                             </div>
+                            <p id="ar-note" class="text-[10px] text-gray-500 mt-4 leading-relaxed"></p>
                         </div>
 
                         <!-- 2. Subject & Context (Italiano) -->
@@ -295,13 +415,13 @@
                             <div class="relative">
                                 <div class="flex justify-between mb-1.5">
                                     <label class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Soggetto</label>
-                                    <button onclick="generateIdea()" class="text-[10px] text-blue-400 hover:text-white flex items-center gap-1 transition-colors">
-                                        <span id="idea-icon">✨</span> Ispirami
+                                    <button onclick="generateIdea()" class="text-[10px] text-blue-400 hover:text-white flex items-center gap-1 transition-colors -mt-1 -mr-1 px-2 py-1.5 rounded-md active:bg-white/10">
+                                        <span id="idea-icon">&#10024;</span> Ispirami
                                     </button>
                                 </div>
                                 <input type="text" id="input-subject" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Un pescatore anziano che ripara le reti...">
                             </div>
-                            
+
                             <!-- REFERENCE IMAGE / ACTION ROW -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
@@ -309,34 +429,36 @@
                                     <input type="text" id="input-action" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Al porto, nebbia...">
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1.5">Immagine Riferimento</label>
+                                    <label class="block text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1.5">Immagini di riferimento</label>
                                     <select id="ref-image-mode" onchange="toggleRefInput()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3.5 text-xs text-gray-300 outline-none focus:border-pink-500 transition-all">
-                                        <option value="none">Nessuna Immagine</option>
-                                        <option value="upload">Allegherò file (Drag & Drop)</option>
-                                        <option value="url">Ho un URL web</option>
+                                        <option value="none">Nessuna immagine</option>
+                                        <option value="style">Riferimento di stile</option>
+                                        <option value="subject">Riferimento di soggetto / personaggio</option>
+                                        <option value="composition">Riferimento di composizione</option>
                                     </select>
-                                    <input type="text" id="ref-image-url" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 mt-2 text-xs text-white outline-none placeholder-gray-600 hidden transition-all" placeholder="Incolla qui il link https://...">
+                                    <input type="text" id="ref-mj-url" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 mt-2 text-xs text-white outline-none placeholder-gray-600 hidden transition-all" placeholder="URL immagine per --sref / --oref">
+                                    <p id="ref-note" class="text-[10px] text-gray-500 mt-2 leading-relaxed"></p>
                                 </div>
                             </div>
-                            
+
                             <!-- COMPOSITION / FRAMING -->
                             <div>
-                                <label class="block text-[10px] font-bold text-cyan-500 uppercase tracking-wider mb-1.5">Angolazione & Distanza</label>
+                                <label class="block text-[10px] font-bold text-cyan-500 uppercase tracking-wider mb-1.5">Angolazione &amp; Distanza</label>
                                 <select id="select-framing" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3.5 text-xs text-gray-300 outline-none focus:border-cyan-500 transition-all">
                                     <option value="">Default (Automatico in base allo stile)</option>
                                     <optgroup label="Angolazione">
-                                        <option value="Eye-level shot">Ad altezza occhi (Neutro)</option>
-                                        <option value="Low angle shot, looking up">Dal basso (Eroico/Dominante)</option>
-                                        <option value="High angle shot, looking down">Dall'alto (Vulnerabile/Contesto)</option>
-                                        <option value="Overhead / Bird's eye view">A volo d'uccello (Zenitale)</option>
-                                        <option value="Dutch angle">Inclinato (Dinamico/Disorientante)</option>
+                                        <option value="eye-level shot">Ad altezza occhi (Neutro)</option>
+                                        <option value="low angle shot looking up">Dal basso (Eroico/Dominante)</option>
+                                        <option value="high angle shot looking down">Dall'alto (Vulnerabile/Contesto)</option>
+                                        <option value="overhead bird's eye view">A volo d'uccello (Zenitale)</option>
+                                        <option value="dutch angle">Inclinato (Dinamico/Disorientante)</option>
                                     </optgroup>
                                     <optgroup label="Distanza">
-                                        <option value="Extreme close-up macro">Macro (Dettaglio estremo)</option>
-                                        <option value="Close-up portrait">Primo Piano (Volto)</option>
-                                        <option value="Medium shot">Campo Medio (Mezzo busto)</option>
-                                        <option value="Full body shot">Figura Intera</option>
-                                        <option value="Wide shot">Campo Lungo (Paesaggio)</option>
+                                        <option value="extreme close-up macro">Macro (Dettaglio estremo)</option>
+                                        <option value="close-up portrait">Primo Piano (Volto)</option>
+                                        <option value="medium shot">Campo Medio (Mezzo busto)</option>
+                                        <option value="full body shot">Figura Intera</option>
+                                        <option value="wide shot">Campo Lungo (Paesaggio)</option>
                                     </optgroup>
                                 </select>
                             </div>
@@ -351,6 +473,7 @@
                                     <optgroup label="Reportage / Street">
                                         <option value="Leica M3 with 35mm lens">35mm (Grandangolo)</option>
                                         <option value="Leica M3 with 50mm lens">50mm (Occhio Umano)</option>
+                                        <option value="Leica with 50mm or 35mm">Leica 35/50 (Misto)</option>
                                         <option value="Telephoto lens (90mm or 135mm)">Teleobiettivo</option>
                                     </optgroup>
                                     <optgroup label="Ritratti / Moda">
@@ -361,11 +484,12 @@
                                     <optgroup label="Epico / Cinema">
                                         <option value="Wide angle lens 24mm">24mm (Epico)</option>
                                         <option value="Large format camera, f/64">Grande Formato (View)</option>
+                                        <option value="Graflex Super D large format">Graflex Super D</option>
                                     </optgroup>
                                 </select>
                             </div>
-                            
-                            <!-- Aperture Control (NEW) -->
+
+                            <!-- Aperture Control -->
                             <div>
                                 <label class="block text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5">Profondità (Apertura)</label>
                                 <select id="select-aperture" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
@@ -383,12 +507,16 @@
                                 <label class="block text-[10px] font-bold text-yellow-500 uppercase tracking-wider mb-1.5">Luce</label>
                                 <select id="select-light" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
                                     <optgroup label="Luce Naturale (Orario)">
-                                        <option value="Soft overcast natural light">Diffusa / Nuvoloso</option>
+                                        <option value="Soft, diffused natural light">Diffusa / Nuvoloso</option>
                                         <option value="Golden Hour side lighting">Golden Hour</option>
+                                        <option value="Golden Hour or harsh sunlight">Golden Hour / Sole duro</option>
                                         <option value="Blue Hour twilight">Blue Hour</option>
                                         <option value="Harsh midday sun">Mezzogiorno</option>
-                                        <option value="Shafts of light (God rays)">Raggi di Luce</option>
-                                        <option value="Soft window light, rainy mood">Finestra / Pioggia</option>
+                                        <option value="Shafts of light (God rays), high contrast backlight">Raggi di Luce</option>
+                                        <option value="Soft window light, rainy mood, reflections">Finestra / Pioggia</option>
+                                        <option value="Natural daylight, often harsh or open shade">Luce naturale documentaria</option>
+                                        <option value="Dramatic sunlight breaking through heavy clouds">Sole tra le nuvole</option>
+                                        <option value="Natural dramatic light, deep shadows (chiaroscuro)">Chiaroscuro naturale</option>
                                     </optgroup>
                                     <optgroup label="Luce Artistica">
                                         <option value="High contrast 'chiaroscuro'">Chiaroscuro</option>
@@ -416,16 +544,20 @@
                                     <optgroup label="Bianco e Nero">
                                         <option value="Tri-X 400 B&W film">Tri-X 400</option>
                                         <option value="Ilford HP5 Plus">Ilford HP5</option>
-                                        <option value="High contrast black and white">B&W Alto Contrasto</option>
-                                        <option value="Classic B&W film (1930s)">B&W Vintage</option>
+                                        <option value="High contrast black and white">B&amp;W Alto Contrasto</option>
+                                        <option value="High contrast black and white film (Tri-X)">B&amp;W Tri-X contrastato</option>
+                                        <option value="High contrast B&W">B&amp;W duro</option>
+                                        <option value="High contrast black and white, Red Filter style">B&amp;W Filtro Rosso</option>
+                                        <option value="Classic B&W film (1930s emulsion)">B&amp;W Vintage anni '30</option>
                                     </optgroup>
                                 </select>
                             </div>
-                            
+
                             <!-- Text Overlay -->
                             <div class="col-span-2">
                                 <label class="block text-[10px] font-bold text-orange-500 uppercase tracking-wider mb-1.5">Testo Visibile (Opzionale)</label>
                                 <input type="text" id="input-text" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white outline-none placeholder-gray-600 transition-all" placeholder="Es. Insegna 'HOTEL'...">
+                                <p class="text-[10px] text-gray-600 mt-1.5">I modelli 2026 scrivono testo leggibile: qui puoi finalmente fidarti.</p>
                             </div>
                         </div>
 
@@ -435,36 +567,36 @@
                     <div class="flex flex-col h-full">
                         <div class="bg-white dark:bg-darkcard rounded-3xl p-1.5 flex-grow flex flex-col shadow-2xl relative overflow-hidden group border border-gray-100 dark:border-gray-700 transition-colors">
                             <!-- Output Header -->
-                            <div class="bg-gray-50 dark:bg-gray-800/80 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center rounded-t-2xl">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
-                                    <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Prompt Generato</span>
+                            <div class="bg-gray-50 dark:bg-gray-800/80 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center rounded-t-2xl gap-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)] shrink-0"></div>
+                                    <span id="output-title" class="text-[11px] sm:text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wide leading-tight">Prompt Generato</span>
                                 </div>
-                                <button onclick="optimizePrompt()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-lg shadow-indigo-900/20 btn-hover">
-                                    <span id="opt-icon">⚡</span> <span id="opt-text">Ottimizza con Gemini</span>
+                                <button onclick="optimizePrompt()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-lg shadow-indigo-900/20 btn-hover shrink-0">
+                                    <span id="opt-icon">&#9889;</span> <span id="opt-text">Ottimizza</span>
                                 </button>
                             </div>
-                            
+
                             <!-- Text Area -->
-                            <textarea id="prompt-output" class="w-full flex-grow p-6 text-gray-800 dark:text-gray-200 bg-white dark:bg-darkcard font-mono text-sm leading-relaxed resize-none outline-none transition-colors rounded-b-2xl" readonly></textarea>
-                            
-                            <!-- Negative Prompt Overlay -->
+                            <textarea id="prompt-output" spellcheck="false" class="w-full flex-grow min-h-[280px] p-6 text-gray-800 dark:text-gray-200 bg-white dark:bg-darkcard font-mono text-sm leading-relaxed resize-none outline-none transition-colors rounded-b-2xl"></textarea>
+
+                            <!-- Footer -->
                             <div class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 p-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center gap-2.5">
+                                <div class="flex items-center justify-between gap-3 mb-2">
+                                    <div id="negative-toggle-wrap" class="flex items-center gap-2.5">
                                         <input type="checkbox" id="merge-negative" onchange="buildPrompt()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
-                                        <label for="merge-negative" class="text-[10px] font-bold text-red-500 uppercase cursor-pointer select-none">Includi Negative</label>
+                                        <label for="merge-negative" class="text-[10px] font-bold text-red-500 uppercase cursor-pointer select-none">Includi --no (Midjourney)</label>
                                     </div>
-                                    <button onclick="copyPrompt()" class="bg-black hover:bg-gray-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-xs font-bold px-5 py-2 rounded-lg transition-colors flex items-center gap-2 btn-hover">
-                                        Copia Tutto
+                                    <button onclick="copyPrompt()" class="ml-auto bg-black hover:bg-gray-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2 btn-hover shrink-0">
+                                        <span id="copy-label">Copia Tutto</span>
                                     </button>
                                 </div>
-                                <p id="negative-preview" class="text-[10px] text-gray-400 dark:text-gray-500 truncate font-mono select-none">
+                                <p id="output-hint" class="text-[10px] text-gray-400 dark:text-gray-500 leading-relaxed">
                                     ...
                                 </p>
                             </div>
                         </div>
-                        
+
                         <!-- History & Actions -->
                         <div class="mt-6 flex justify-between items-center">
                             <div class="flex-grow overflow-hidden mr-4">
@@ -474,7 +606,7 @@
                                 </div>
                             </div>
                             <!-- Export Button -->
-                            <button onclick="downloadHistory()" class="text-xs text-gray-400 hover:text-white underline whitespace-nowrap self-end mb-3 mr-1">
+                            <button onclick="downloadHistory()" class="text-xs text-gray-400 hover:text-white underline whitespace-nowrap self-end mb-1 px-2 py-2 rounded-md active:bg-white/10">
                                 Scarica .txt
                             </button>
                         </div>
@@ -488,48 +620,238 @@
 
     <!-- JS Logic -->
     <script>
-        let apiKey = localStorage.getItem('atelier_api_key') || "";
-        let savedModel = localStorage.getItem('atelier_model') || "gemini-2.5-flash-preview-09-2025";
+        /* ============================================================
+           STATO
+           ============================================================ */
+        let provider   = localStorage.getItem('atelier_provider') || 'anthropic';
+        let savedModel = localStorage.getItem('atelier_model_' + provider) || '';
         let currentChart = null;
         let selectedMaster = null;
-        let selectedAR = "3:2"; 
-        let selectedTone = "default"; 
+        let selectedAR = "3:2";
+        let selectedTone = "default";
+        let selectedEngine = localStorage.getItem('atelier_engine') || 'chatgpt';
+        let selectedAttribution = localStorage.getItem('atelier_attr') || 'grammar';
 
-        // THE DATABASE - SORTED BY SURNAME
+        const keyName = p => 'atelier_key_' + p;
+        const getKey  = p => localStorage.getItem(keyName(p || provider)) || '';
+
+        /* ============================================================
+           PROFILI DEI PROVIDER (ottimizzazione testuale)
+           ============================================================ */
+        const providers = {
+            anthropic: {
+                label: 'Anthropic (Claude)',
+                keyUrl: 'https://console.anthropic.com/settings/keys',
+                models: [
+                    ['claude-opus-5',   'Claude Opus 5 (consigliato)'],
+                    ['claude-sonnet-5', 'Claude Sonnet 5 (più veloce)'],
+                    ['claude-haiku-4-5','Claude Haiku 4.5 (economico)']
+                ],
+                async call(model, key, system, user) {
+                    const res = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'content-type': 'application/json',
+                            'x-api-key': key,
+                            'anthropic-version': '2023-06-01',
+                            'anthropic-dangerous-direct-browser-access': 'true'
+                        },
+                        body: JSON.stringify({
+                            model,
+                            max_tokens: 2000,
+                            system,
+                            output_config: { effort: 'low' },
+                            messages: [{ role: 'user', content: user }]
+                        })
+                    });
+                    const data = await res.json().catch(() => null);
+                    if (!res.ok) throw apiError(res.status, data?.error?.message, data?.error?.type);
+                    if (data.stop_reason === 'refusal') {
+                        throw new Error("Il modello ha rifiutato la richiesta. Prova a riformulare il soggetto.");
+                    }
+                    const txt = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+                    if (!txt) throw new Error("Risposta vuota dal modello.");
+                    return txt;
+                }
+            },
+            google: {
+                label: 'Google (Gemini)',
+                keyUrl: 'https://aistudio.google.com/apikey',
+                models: [
+                    ['gemini-3.5-flash',      'Gemini 3.5 Flash (consigliato)'],
+                    ['gemini-3.6-flash',      'Gemini 3.6 Flash'],
+                    ['gemini-3.5-flash-lite', 'Gemini 3.5 Flash Lite (economico)']
+                ],
+                async call(model, key, system, user) {
+                    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+                                encodeURIComponent(model) + ':generateContent';
+                    const body = { contents: [{ role: 'user', parts: [{ text: user }] }] };
+                    if (system) body.systemInstruction = { parts: [{ text: system }] };
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+                        body: JSON.stringify(body)
+                    });
+                    const data = await res.json().catch(() => null);
+                    if (!res.ok) throw apiError(res.status, data?.error?.message, data?.error?.status);
+                    const cand = data?.candidates?.[0];
+                    if (cand?.finishReason === 'SAFETY') {
+                        throw new Error("Contenuto bloccato dai filtri di sicurezza di Google. Riformula il soggetto.");
+                    }
+                    const txt = (cand?.content?.parts || []).map(p => p.text || '').join('').trim();
+                    if (!txt) throw new Error("Risposta vuota dal modello.");
+                    return txt;
+                }
+            },
+            openai: {
+                label: 'OpenAI (ChatGPT)',
+                keyUrl: 'https://platform.openai.com/api-keys',
+                models: [
+                    ['gpt-5.6-terra', 'GPT-5.6 Terra (consigliato)'],
+                    ['gpt-5.6-sol',   'GPT-5.6 Sol (più capace)'],
+                    ['gpt-5.6-luna',  'GPT-5.6 Luna (economico)']
+                ],
+                async call(model, key, system, user) {
+                    const messages = [];
+                    if (system) messages.push({ role: 'system', content: system });
+                    messages.push({ role: 'user', content: user });
+                    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + key },
+                        body: JSON.stringify({ model, messages })
+                    });
+                    const data = await res.json().catch(() => null);
+                    if (!res.ok) throw apiError(res.status, data?.error?.message, data?.error?.type);
+                    const txt = (data?.choices?.[0]?.message?.content || '').trim();
+                    if (!txt) throw new Error("Risposta vuota dal modello.");
+                    return txt;
+                }
+            }
+        };
+
+        /* Traduce codici HTTP in messaggi comprensibili. */
+        function apiError(status, message, type) {
+            const detail = message ? ' — ' + message : '';
+            if (status === 400 && /model/i.test(message || '')) {
+                return new Error("Modello non riconosciuto dal fornitore: probabilmente è stato ritirato. Scegline un altro nelle impostazioni." + detail);
+            }
+            switch (status) {
+                case 400: return new Error("Richiesta non valida" + detail);
+                case 401: return new Error("Chiave API non valida o non riconosciuta. Se è una vecchia chiave Gemini, creane una nuova (vedi la guida nelle impostazioni)." + detail);
+                case 403: return new Error("Chiave rifiutata: potrebbe essere di tipo obsoleto, priva di permessi, o senza credito." + detail);
+                case 404: return new Error("Modello inesistente o ritirato. Cambialo nelle impostazioni." + detail);
+                case 429: return new Error("Hai superato il limite di richieste o esaurito il credito. Riprova tra poco." + detail);
+                default:
+                    if (status >= 500) return new Error("Il fornitore ha un problema temporaneo (" + status + "). Riprova tra qualche minuto." + detail);
+                    return new Error("Errore " + status + (type ? ' (' + type + ')' : '') + detail);
+            }
+        }
+
+        /* ============================================================
+           PROFILI DEI MOTORI DI DESTINAZIONE
+           ============================================================ */
+        const engines = {
+            chatgpt: {
+                label: 'ChatGPT Images 2.0',
+                title: 'Prompt per ChatGPT Images 2.0',
+                style: 'prose',
+                flags: false,
+                ratios: ['1:1','3:2','2:3','4:5','16:9','9:16','3:1','1:3'],
+                refs: {
+                    style: "Allega l'immagine in chat e scrivi: «usa questa come riferimento di stile». Non incollare URL: ChatGPT non li scarica.",
+                    subject: "Allega l'immagine: GPT Image 2 mantiene il personaggio coerente anche su più immagini generate insieme.",
+                    composition: "Allega l'immagine e chiedi esplicitamente di conservarne l'impianto compositivo."
+                },
+                note: "Ragionamento nativo, testo leggibile, fino a 8 immagini coerenti, 2K. Nessun flag: il formato si chiede a parole o dal menu.",
+                arNote: "Su ChatGPT il formato va chiesto a parole. Il rapporto scelto viene scritto in coda al prompt come istruzione, non come flag.",
+                hint: "Incolla in ChatGPT. Per i risultati migliori attiva la modalità «Thinking» (Plus/Pro/Business): pianifica il layout e verifica il risultato."
+            },
+            nb2: {
+                label: 'Nano Banana 2',
+                title: 'Prompt per Nano Banana 2',
+                style: 'prose-compact',
+                flags: false,
+                ratios: ['1:1','3:2','2:3','3:4','4:3','4:5','5:4','16:9','9:16','21:9'],
+                refs: {
+                    style: "Carica l'immagine come riferimento di stile (fino a 3 per generazione). Niente URL: il modello non li scarica.",
+                    subject: "Carica l'immagine come riferimento di soggetto: fino a 10 oggetti e 4 personaggi per generazione.",
+                    composition: "Carica l'immagine e descrivi cosa dell'impianto va conservato."
+                },
+                note: "Veloce ed economico. Regge fino a 4K e 14 immagini di riferimento, ma perde colpi sui prompt troppo lunghi: qui l'app scrive in forma condensata.",
+                arNote: "Su Gemini il rapporto è un parametro (aspect ratio), non testo. Scegli il formato dal menu dell'app Gemini o via API.",
+                hint: "Modello: gemini-3.1-flash-image. Incolla nell'app Gemini o nell'API, e ricorda di impostare il formato dal menu, non nel testo. Le immagini portano il watermark SynthID."
+            },
+            nbpro: {
+                label: 'Nano Banana Pro',
+                title: 'Prompt per Nano Banana Pro',
+                style: 'prose',
+                flags: false,
+                ratios: ['1:1','3:2','2:3','3:4','4:3','4:5','5:4','16:9','9:16','21:9'],
+                refs: {
+                    style: "Carica l'immagine come riferimento di stile (fino a 3 per generazione).",
+                    subject: "Carica l'immagine come riferimento di soggetto: fino a 10 oggetti e 4 personaggi.",
+                    composition: "Carica l'immagine e descrivi cosa dell'impianto va conservato."
+                },
+                note: "Qualità studio, 4K, testo affidabile, ancoraggio ai fatti tramite Search. Ragiona prima di disegnare: qui il prompt può essere lungo e stratificato.",
+                arNote: "Su Gemini il rapporto è un parametro (aspect ratio), non testo. Scegli il formato dal menu dell'app Gemini o via API.",
+                hint: "Modello: gemini-3-pro-image. Incolla nell'app Gemini o nell'API. Costa circa 0,13 $ a immagine: è il motore da usare quando il risultato deve essere definitivo."
+            },
+            mj: {
+                label: 'Midjourney v8',
+                title: 'Prompt per Midjourney v8',
+                style: 'keywords',
+                flags: true,
+                ratios: ['1:1','3:2','2:3','4:5','16:9','9:16','21:9','3:4'],
+                refs: {
+                    style: "Incolla l'URL dell'immagine: verrà aggiunto come --sref (riferimento di stile).",
+                    subject: "Incolla l'URL dell'immagine: verrà aggiunto come --oref (omni reference, coerenza di soggetto).",
+                    composition: "Incolla l'URL: verrà messo in testa al prompt come immagine di riferimento."
+                },
+                note: "L'unico dei tre che usa davvero i flag: --ar, --no, --sref, --oref, --stylize. Preferisce keyword dense alla prosa.",
+                arNote: "Su Midjourney il rapporto è il flag --ar, che l'app aggiunge automaticamente in coda.",
+                hint: "Incolla in Discord o sul sito Midjourney. Qui i flag servono davvero: --no funziona solo su questo motore."
+            }
+        };
+
+        /* ============================================================
+           ARCHIVIO — 16 MAESTRI
+           `signature` = firma visiva in positivo (sostituisce i negative prompt)
+           `negMJ`     = negazioni, valide solo per Midjourney
+           `living`    = vivente al 2026 (rilevante per le policy di ChatGPT)
+           ============================================================ */
         const photographers = [
             {
-                id: 'adams',
-                name: 'Ansel Adams',
+                id: 'adams', name: 'Ansel Adams', living: false,
                 gradient: 'linear-gradient(to bottom right, #000000, #434343)',
                 desc: '<b>Il Sistema Zonale.</b> Il maestro assoluto del paesaggio. La sua tecnica garantisce una gamma tonale perfetta, dal nero più profondo al bianco puro, con dettaglio ovunque.',
                 stats: [95, 0, 20, 90, 10],
                 valCam: 'Large format camera, f/64',
-                valLight: 'Dramatic sunlight breaking through heavy clouds', 
+                valLight: 'Dramatic sunlight breaking through heavy clouds',
                 valFilm: 'High contrast black and white, Red Filter style',
                 valFocus: 'f/64 (Tutto a Fuoco)',
-                negContext: 'color, colorized, tinted, blur, shallow depth of field, digital hdr',
+                signature: 'monochrome silver-gelatin print with the full zone scale intact, from deep textured blacks to clean detailed whites; every plane sharp from foreground rock to distant ridge; skies darkened by a red filter so the clouds separate as sculpted volumes',
+                negMJ: 'color, colorized, tinted, blur, shallow depth of field, digital hdr',
                 defaultSubject: 'Picco di montagna granitico tra le nuvole',
                 defaultAction: 'Immobile nella maestosità della natura',
                 recAR: '4:5'
             },
             {
-                id: 'anderson',
-                name: 'Wes Anderson',
+                id: 'anderson', name: 'Wes Anderson', living: true,
                 gradient: 'linear-gradient(to bottom right, #fca5a5, #93c5fd)',
                 desc: '<b>Simmetria Pastello.</b> Composizioni compulsive e colori da favola. Inquadrature perfettamente frontali (planimetriche), estetica da casa delle bambole e palette cromatica definita.',
                 stats: [40, 80, 0, 10, 100],
                 valCam: 'Wide angle lens 24mm',
                 valLight: 'Flat, even lighting (high key)',
-                valFilm: 'Kodachrome 64 film', 
+                valFilm: 'Kodachrome 64 film',
                 valFocus: 'f/11 (Nitido)',
-                negContext: 'asymmetry, dutch angle, dark shadows, gritty, black and white',
+                signature: 'rigorously frontal, planimetric composition with the subject dead-centre and the horizon perfectly level; flat even light with no modelling shadows; a restricted pastel palette of dusty pink, butter yellow and powder blue; every prop deliberately placed, like a doll\'s-house interior',
+                negMJ: 'asymmetry, dutch angle, dark shadows, gritty, black and white',
                 defaultSubject: 'Concierge alla reception di un Grand Hotel',
                 defaultAction: 'Perfettamente immobile e simmetrico',
                 recAR: '16:9'
             },
             {
-                id: 'bresson',
-                name: 'Henri Cartier-Bresson',
+                id: 'bresson', name: 'Henri Cartier-Bresson', living: false,
                 gradient: 'linear-gradient(to bottom right, #333333, #e5e5e5)',
                 desc: '<b>Il Momento Decisivo.</b> Il padre del reportage. Cerca la geometria spontanea nel caos della vita quotidiana. Uso esclusivo del 50mm, nessuna messa in scena.',
                 stats: [70, 0, 70, 95, 0],
@@ -537,14 +859,14 @@
                 valLight: 'Soft, diffused natural light',
                 valFilm: 'Tri-X 400 B&W film',
                 valFocus: 'f/8 (Bilanciato)',
-                negContext: 'color, studio lighting, posed, artificial, telephoto compression',
+                signature: 'black-and-white 35mm reportage caught unposed at the instant the geometry resolves; natural available light only; visible Tri-X grain; the subject unaware of the camera, the background lines falling into unplanned order',
+                negMJ: 'color, studio lighting, posed, artificial, telephoto compression',
                 defaultSubject: 'Un uomo che salta una pozzanghera',
                 defaultAction: 'Colto a mezz\'aria, riflesso nell\'acqua',
                 recAR: '3:2'
             },
             {
-                id: 'crewdson',
-                name: 'Gregory Crewdson',
+                id: 'crewdson', name: 'Gregory Crewdson', living: true,
                 gradient: 'linear-gradient(to bottom right, #1e3a8a, #111827)',
                 desc: '<b>Cinema Suburbano.</b> Scene inquietanti in periferia ("Twilight Zone"). Luci cinematografiche complesse, dettagli maniacali e un senso di solitudine sospesa.',
                 stats: [75, 60, 10, 30, 100],
@@ -552,14 +874,14 @@
                 valLight: 'Cinematic artificial lighting (tungsten)',
                 valFilm: 'Cinematic Color Grade',
                 valFocus: 'f/16 (Tutto a Fuoco)',
-                negContext: 'black and white, candid, handheld, blurry, simple lighting',
+                signature: 'a single suspended cinematic frame lit like a film set: multiple tungsten sources, practical lamps glowing in windows, faint fog holding the beams; large-format sharpness across the whole depth of the scene; cold blue twilight against warm interior light; every detail of the suburban street deliberately staged',
+                negMJ: 'black and white, candid, handheld, blurry, simple lighting',
                 defaultSubject: 'Figura solitaria in un giardino suburbano',
                 defaultAction: 'Fissa una finestra illuminata al crepuscolo',
                 recAR: '16:9'
             },
             {
-                id: 'depardon',
-                name: 'Raymond Depardon',
+                id: 'depardon', name: 'Raymond Depardon', living: true,
                 gradient: 'linear-gradient(to bottom right, #d1d5db, #fcd34d)',
                 desc: '<b>Il Tempo Sospeso.</b> La Francia rurale e i "tempi morti". Fotografia frontale, colori pastello desaturati, estetica della provincia e del silenzio.',
                 stats: [40, 40, 30, 90, 10],
@@ -567,14 +889,14 @@
                 valLight: 'Soft, diffused natural light',
                 valFilm: 'Muted, desaturated tones',
                 valFocus: 'f/8 (Bilanciato)',
-                negContext: 'high contrast, harsh shadows, dramatic lighting, vivid colors, action, movement, wide angle distortion',
+                signature: 'a quiet frontal view held at a respectful distance, nothing happening; flat overcast light with gentle shadows; muted, chalky provincial colours; the stillness of a place waiting, ordinary and unhurried',
+                negMJ: 'high contrast, harsh shadows, dramatic lighting, vivid colors, action, movement, wide angle distortion',
                 defaultSubject: 'Una piazza di paese deserta in Francia',
                 defaultAction: 'Vuota, silenziosa, in attesa',
                 recAR: '3:2'
             },
             {
-                id: 'eggleston',
-                name: 'William Eggleston',
+                id: 'eggleston', name: 'William Eggleston', living: true,
                 gradient: 'linear-gradient(to bottom right, #ef4444, #3b82f6)',
                 desc: '<b>Il Banale Sublime.</b> Il padre del colore americano. Toni saturi e vibranti (Dye Transfer), soggetti quotidiani banali resi monumentali attraverso prospettive insolite.',
                 stats: [60, 100, 40, 95, 20],
@@ -582,14 +904,14 @@
                 valLight: 'Golden Hour or harsh sunlight',
                 valFilm: 'Dye Transfer Print (Vivid Colors)',
                 valFocus: 'f/11 (Nitido)',
-                negContext: 'black and white, muted, desaturated, studio, dramatic lighting',
+                signature: 'saturated dye-transfer colour with reds and blues pushed to the edge of the print; an utterly banal American subject framed from an odd, slightly low or oblique angle that makes it monumental; hard afternoon sun; democratic attention to a thing nobody would photograph',
+                negMJ: 'black and white, muted, desaturated, studio, dramatic lighting',
                 defaultSubject: 'Un triciclo abbandonato in un vialetto',
                 defaultAction: 'Illuminato dal sole pomeridiano',
                 recAR: '3:2'
             },
             {
-                id: 'guler',
-                name: 'Ara Güler',
+                id: 'guler', name: 'Ara Güler', living: false,
                 gradient: 'linear-gradient(to bottom right, #111827, #6b7280)',
                 desc: '<b>L\'Occhio di Istanbul.</b> Fotografia in bianco e nero carica di "Hüzün" (malinconia). Silhouette potenti, fumo, nebbia e chiaroscuro profondo.',
                 stats: [80, 0, 70, 95, 10],
@@ -597,14 +919,14 @@
                 valLight: 'Natural dramatic light, deep shadows (chiaroscuro)',
                 valFilm: 'High contrast black and white film (Tri-X)',
                 valFocus: 'f/5.6 (Ambientale)',
-                negContext: 'color, colorized, bright cheerful colors, modern architecture, smartphones',
+                signature: 'high-contrast black and white weighted with melancholy; figures reduced to silhouettes against mist, coal smoke and low winter sun; deep shadows swallowing half the frame; a mid-century harbour city, worn stone and old work clothes',
+                negMJ: 'color, colorized, bright cheerful colors, modern architecture, smartphones',
                 defaultSubject: 'Vecchi pescatori sul Bosforo',
                 defaultAction: 'Riparano le reti nella nebbia mattutina',
                 recAR: '3:2'
             },
             {
-                id: 'fanho',
-                name: 'Fan Ho',
+                id: 'fanho', name: 'Fan Ho', living: false,
                 gradient: 'linear-gradient(to bottom right, #000000, #fbbf24)',
                 desc: '<b>Il Teatro delle Ombre.</b> Il "Rembrandt dell\'Est". Luci e ombre drammatiche a Hong Kong. Composizioni geometriche rigorose, fumo e raggi di luce mistici.',
                 stats: [95, 0, 40, 70, 80],
@@ -612,29 +934,29 @@
                 valLight: 'Shafts of light (God rays), high contrast backlight',
                 valFilm: 'High contrast B&W',
                 valFocus: 'f/8 (Geometrico)',
-                negContext: 'color, flat lighting, cloudy, messy composition',
+                signature: 'a single hard shaft of light cutting diagonally through smoke or steam into a dark space; rigorous geometry of stairs, walls and cast shadows; one small figure placed where the light lands; deep black and white with luminous highlights',
+                negMJ: 'color, flat lighting, cloudy, messy composition',
                 defaultSubject: 'Mercato di Hong Kong anni \'50',
                 defaultAction: 'Venditore solitario in un raggio di luce',
                 recAR: '1:1'
             },
             {
-                id: 'lange',
-                name: 'Dorothea Lange',
+                id: 'lange', name: 'Dorothea Lange', living: false,
                 gradient: 'linear-gradient(to bottom right, #4b5563, #9ca3af)',
                 desc: '<b>L\'Empatia Documentaria.</b> La Grande Depressione e la resilienza umana. Ritratti crudi, focus su mani e volti segnati, dignità nella povertà.',
-                stats: [60, 0, 50, 100, 10], 
+                stats: [60, 0, 50, 100, 10],
                 valCam: 'Graflex Super D large format',
                 valLight: 'Natural daylight, often harsh or open shade',
                 valFilm: 'Classic B&W film (1930s emulsion)',
                 valFocus: 'f/8 (Documentario)',
-                negContext: 'color, modern clothing, luxury, smiling, makeup, studio',
+                signature: 'a plain black-and-white documentary portrait made in daylight; weathered skin, working hands and mended 1930s clothing rendered in full detail; the subject holding the camera\'s gaze with unguarded dignity; nothing arranged, nothing softened',
+                negMJ: 'color, modern clothing, luxury, smiling, makeup, studio',
                 defaultSubject: 'Madre migrante in un campo di lavoro',
                 defaultAction: 'Tiene in braccio un bambino, sguardo preoccupato',
                 recAR: '4:5'
             },
             {
-                id: 'leibovitz',
-                name: 'Annie Leibovitz',
+                id: 'leibovitz', name: 'Annie Leibovitz', living: true,
                 gradient: 'linear-gradient(to bottom right, #1f2937, #4b5563)',
                 desc: '<b>La Narrazione Epica.</b> Ritratto editoriale narrativo. Luci pittoriche, set complessi, post-produzione che rende lo sfondo "crushed" (scuro e denso).',
                 stats: [65, 50, 10, 50, 90],
@@ -642,14 +964,14 @@
                 valLight: 'Soft, diffused natural light',
                 valFilm: 'Cinematic Color Grade',
                 valFocus: 'f/4 (Sfondo Morbido)',
-                negContext: 'harsh lighting, candid, snapshot, high key, white background',
+                signature: 'an editorial portrait staged like a scene from a novel: an elaborate location, the subject in a deliberate theatrical pose; large soft key light modelling the face; rich painterly colour with the shadows crushed dark and dense; the background dimmed so the figure carries the frame',
+                negMJ: 'harsh lighting, candid, snapshot, high key, white background',
                 defaultSubject: 'Scrittore famoso alla scrivania vintage',
                 defaultAction: 'In posa drammatica in una grande libreria',
                 recAR: '4:5'
             },
             {
-                id: 'leiter',
-                name: 'Saul Leiter',
+                id: 'leiter', name: 'Saul Leiter', living: false,
                 gradient: 'linear-gradient(to bottom right, #ef4444, #e5e7eb, #3b82f6)',
                 desc: '<b>Astrazione Urbana.</b> Pioniere del colore poetico. Scatti attraverso vetri appannati, pioggia, riflessi e composizioni audaci che nascondono il soggetto.',
                 stats: [30, 70, 60, 80, 80],
@@ -657,14 +979,14 @@
                 valLight: 'Soft window light, rainy mood, reflections',
                 valFilm: 'Early Kodachrome (Muted/Warm)',
                 valFocus: 'f/4 (Compresso/Sfocato)',
-                negContext: 'wide angle, clear view, sharp focus, digital, harsh contrast',
+                signature: 'shot through a rain-streaked or fogged pane of glass, the subject half hidden behind a dark foreground shape; telephoto compression flattening the street into layers; muted warm early-Kodachrome colour with one saturated accent — a red umbrella, a green awning — floating in the mist',
+                negMJ: 'wide angle, clear view, sharp focus, digital, harsh contrast',
                 defaultSubject: 'Ombrello rosso visto attraverso un vetro appannato',
                 defaultAction: 'Cammina sotto la pioggia a New York',
                 recAR: '4:5'
             },
             {
-                id: 'lindbergh',
-                name: 'Peter Lindbergh',
+                id: 'lindbergh', name: 'Peter Lindbergh', living: false,
                 gradient: 'linear-gradient(to bottom right, #000000, #9ca3af)',
                 desc: '<b>La Verità Nuda.</b> Ritratti di moda senza trucco, autentici ed emotivi. Bianco e nero a grana grossa, luce naturale morbida, rifiuto del ritocco.',
                 stats: [60, 0, 60, 90, 40],
@@ -672,14 +994,14 @@
                 valLight: 'Soft, diffused natural light',
                 valFilm: 'Tri-X 400 B&W film',
                 valFocus: 'f/2.8 (Bokeh Leggero)',
-                negContext: 'makeup, airbrushed, plastic skin, color, studio lighting, artificial',
+                signature: 'a bare, unretouched black-and-white fashion portrait: bare skin with visible pores, freckles and fine lines, hair loose and undone; soft grey daylight from a window or an overcast sky; coarse film grain; an open, unguarded expression and a plain white shirt',
+                negMJ: 'makeup, airbrushed, plastic skin, color, studio lighting, artificial',
                 defaultSubject: 'Supermodella senza trucco',
                 defaultAction: 'Ride naturalmente con i capelli al vento',
                 recAR: '4:5'
             },
             {
-                id: 'maier',
-                name: 'Vivian Maier',
+                id: 'maier', name: 'Vivian Maier', living: false,
                 gradient: 'linear-gradient(to bottom right, #374151, #d1d5db)',
                 desc: '<b>Il Segreto Riflesso.</b> Street photography speculare. Autoritratti in vetrine e specchi, formato quadrato, osservazione silenziosa della vita urbana.',
                 stats: [65, 0, 50, 90, 10],
@@ -687,14 +1009,14 @@
                 valLight: 'Soft, diffused natural light',
                 valFilm: 'Tri-X 400 B&W film',
                 valFocus: 'f/8 (Bilanciato)',
-                negContext: 'color, modern technology, smartphones, digital',
+                signature: 'a square-format black-and-white street photograph seen from waist height, as through a twin-lens reflex held at the chest; the photographer\'s own reflection caught in a shop window or a mirror; soft mid-century daylight, 1950s coats and hats, quiet unobserved watching',
+                negMJ: 'color, modern technology, smartphones, digital',
                 defaultSubject: 'Autoritratto riflesso in una vetrina',
                 defaultAction: 'Tiene la Rolleiflex all\'altezza della vita',
                 recAR: '1:1'
             },
             {
-                id: 'mccurry',
-                name: 'Steve McCurry',
+                id: 'mccurry', name: 'Steve McCurry', living: true,
                 gradient: 'linear-gradient(to bottom right, #dc2626, #d97706)',
                 desc: '<b>Il Colore dell\'Anima.</b> Ritratti con contatto visivo ipnotico. Colori saturi e caldi (stile Kodachrome), luce morbida ma direzionale, focus sugli occhi.',
                 stats: [60, 95, 20, 80, 30],
@@ -702,14 +1024,14 @@
                 valLight: 'Soft, diffused natural light',
                 valFilm: 'Kodachrome 64 film',
                 valFocus: 'f/1.8 (Sfondo Sfocato)',
-                negContext: 'black and white, desaturated, harsh shadows, wide angle distortion',
+                signature: 'a close colour portrait built around direct, unblinking eye contact, the irises rendered with piercing clarity; warm saturated Kodachrome reds and ochres; soft directional daylight modelling the face; a richly textured but softly blurred background',
+                negMJ: 'black and white, desaturated, harsh shadows, wide angle distortion',
                 defaultSubject: 'Anziano con turbante colorato',
                 defaultAction: 'Guarda direttamente in camera con occhi intensi',
                 recAR: '4:5'
             },
             {
-                id: 'newton',
-                name: 'Helmut Newton',
+                id: 'newton', name: 'Helmut Newton', living: false,
                 gradient: 'linear-gradient(to bottom right, #000000, #ffffff)',
                 desc: '<b>Moda High Voltage.</b> Donne statuarie e dominanti. Ambientazioni fredde o lussuose, uso aggressivo del flash diretto che crea ombre nette.',
                 stats: [90, 0, 50, 60, 90],
@@ -717,259 +1039,290 @@
                 valLight: 'Harsh, direct flash lighting',
                 valFilm: 'High contrast black and white',
                 valFocus: 'f/8 (Nitido)',
-                negContext: 'soft lighting, romantic, blurred background, weak pose, smiling',
+                signature: 'hard direct on-camera flash carving a sharp black shadow onto the wall behind; a statuesque figure standing tall and commanding, chin level, expression cool; glossy high-contrast black and white; a cold luxury setting — hotel corridor, empty pool, marble lobby — at night',
+                negMJ: 'soft lighting, romantic, blurred background, weak pose, smiling',
                 defaultSubject: 'Donna alta in smoking (Le Smoking)',
                 defaultAction: 'In piedi in un corridoio d\'hotel di notte',
                 recAR: '4:5'
             },
             {
-                id: 'salgado',
-                name: 'Sebastião Salgado',
+                id: 'salgado', name: 'Sebastião Salgado', living: false,
                 gradient: 'linear-gradient(to bottom right, #000000, #525252)',
                 desc: '<b>La Genesi Umana.</b> Documentario epico. Nobilitazione del lavoro e della natura attraverso un bianco e nero materico, metallico e grandioso.',
                 stats: [85, 0, 80, 85, 20],
                 valCam: 'Wide angle lens 24mm',
-                valLight: "High contrast 'chiaroscuro'",
+                valLight: 'High contrast \'chiaroscuro\'',
                 valFilm: 'Tri-X 400 B&W film',
                 valFocus: 'f/11 (Profondo)',
-                negContext: 'color, flat lighting, smooth skin, clean clothes, studio',
+                signature: 'monumental black and white with a metallic, mineral surface: skin, mud, dust and sweat rendered as texture; hard raking light against deep shadow; a wide lens taking in a mass of working bodies at epic scale, the labour ennobled rather than pitied',
+                negMJ: 'color, flat lighting, smooth skin, clean clothes, studio',
                 defaultSubject: 'Minatori coperti di fango',
                 defaultAction: 'Scalano una scala in una miniera a cielo aperto',
                 recAR: '3:2'
             }
         ];
 
-        // INIT
+        /* ============================================================
+           INIT
+           ============================================================ */
         document.addEventListener('DOMContentLoaded', () => {
             initPhotographerList();
             initChart();
-            selectPhotographer('adams'); // Default
             initBuilderListeners();
+            setEngine(selectedEngine, true);
+            setAttribution(selectedAttribution, true);
+            selectPhotographer('adams');
             loadHistoryUI();
-            
-            // Mobile Menu Toggle Fix
+
             const btn = document.getElementById('mobile-menu-btn');
             const menu = document.getElementById('mobile-menu');
-            if(btn && menu) {
-                btn.addEventListener('click', () => {
-                    menu.classList.toggle('hidden');
-                });
-            }
+            if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
         });
 
-        // --- UI Functions ---
-        function scrollToSection(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); }
-        function openSettings() { 
-            const m = document.getElementById('settings-modal');
-            document.getElementById('api-key-input').value = apiKey;
-            document.getElementById('model-select').value = savedModel;
-            m.classList.add('active'); 
+        /* ============================================================
+           UI GENERALE
+           ============================================================ */
+        function scrollToSection(id) {
+            // Su mobile il menu a tendina copre il contenuto: va chiuso dopo il salto.
+            document.getElementById('mobile-menu').classList.add('hidden');
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function openSettings() {
+            document.getElementById('provider-select').value = provider;
+            populateModels();
+            document.getElementById('api-key-input').value = getKey();
+            updateKeyStatus();
+            document.getElementById('settings-modal').classList.add('active');
         }
         function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
+
+        function onProviderChange() {
+            provider = document.getElementById('provider-select').value;
+            populateModels();
+            document.getElementById('api-key-input').value = getKey();
+            updateKeyStatus();
+        }
+
+        function populateModels() {
+            const p = providers[provider];
+            const sel = document.getElementById('model-select');
+            sel.innerHTML = '';
+            p.models.forEach(([value, label]) => {
+                const o = document.createElement('option');
+                o.value = value; o.textContent = label;
+                sel.appendChild(o);
+            });
+            const stored = localStorage.getItem('atelier_model_' + provider);
+            sel.value = (stored && p.models.some(m => m[0] === stored)) ? stored : p.models[0][0];
+            document.getElementById('key-link').href = p.keyUrl;
+        }
+
+        function updateKeyStatus() {
+            const el = document.getElementById('key-status');
+            el.textContent = getKey()
+                ? 'Chiave salvata in questo browser per ' + providers[provider].label + '.'
+                : 'Nessuna chiave salvata per ' + providers[provider].label + '.';
+        }
+
         function saveSettings() {
-            apiKey = document.getElementById('api-key-input').value.trim();
+            provider = document.getElementById('provider-select').value;
             savedModel = document.getElementById('model-select').value;
-            localStorage.setItem('atelier_api_key', apiKey);
-            localStorage.setItem('atelier_model', savedModel);
+            const key = document.getElementById('api-key-input').value.trim();
+            localStorage.setItem('atelier_provider', provider);
+            localStorage.setItem('atelier_model_' + provider, savedModel);
+            if (key) localStorage.setItem(keyName(provider), key);
+            updateKeyStatus();
             closeSettings();
         }
 
-        function toggleRefInput() {
-            const mode = document.getElementById('ref-image-mode').value;
-            const urlInput = document.getElementById('ref-image-url');
-            if(mode === 'url') {
-                urlInput.classList.remove('hidden');
+        function clearKey() {
+            localStorage.removeItem(keyName(provider));
+            document.getElementById('api-key-input').value = '';
+            updateKeyStatus();
+        }
+
+        /* ============================================================
+           MOTORE, CITAZIONE, FORMATO
+           ============================================================ */
+        function setEngine(id, silent) {
+            selectedEngine = id;
+            localStorage.setItem('atelier_engine', id);
+            const eng = engines[id];
+
+            document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-eng-' + id).classList.add('selected');
+
+            document.getElementById('engine-note').textContent = eng.note;
+            document.getElementById('output-title').textContent = eng.title;
+            document.getElementById('output-hint').textContent = eng.hint;
+            document.getElementById('ar-note').textContent = eng.arNote;
+
+            // Il toggle --no ha senso solo su Midjourney
+            const wrap = document.getElementById('negative-toggle-wrap');
+            wrap.style.display = eng.flags ? 'flex' : 'none';
+            if (!eng.flags) document.getElementById('merge-negative').checked = false;
+
+            renderRatios();
+            toggleRefInput();
+            if (!silent) buildPrompt();
+        }
+
+        function setAttribution(mode, silent) {
+            selectedAttribution = mode;
+            localStorage.setItem('atelier_attr', mode);
+            document.querySelectorAll('.attr-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-attr-' + mode).classList.add('selected');
+            updateAttrNote();
+            if (!silent) buildPrompt();
+        }
+
+        function updateAttrNote() {
+            const el = document.getElementById('attr-note');
+            const living = selectedMaster && selectedMaster.living;
+            if (selectedAttribution === 'tech') {
+                el.className = 'text-[10px] text-gray-500 mt-3 leading-relaxed';
+                el.textContent = "Solo i parametri tecnici. Nessun rischio di rifiuto, ma perdi la personalità dell'autore.";
+            } else if (selectedAttribution === 'grammar') {
+                el.className = 'text-[10px] text-gray-500 mt-3 leading-relaxed';
+                el.textContent = "Il nome resta fuori, ma il DNA del maestro viene scritto per esteso. È l'opzione più controllabile: se il risultato non convince, sai quale parametro toccare.";
             } else {
-                urlInput.classList.add('hidden');
-                urlInput.value = ''; // Reset
-            }
-            buildPrompt();
-        }
-        
-        function resetBuilder() {
-             // Reset core fields
-             document.getElementById('input-subject').value = "";
-             document.getElementById('input-action').value = "";
-             document.getElementById('input-text').value = "";
-             document.getElementById('ref-image-mode').value = "none";
-             document.getElementById('ref-image-url').classList.add('hidden');
-             document.getElementById('ref-image-url').value = "";
-             
-             // Reset technicals to master defaults (re-run select)
-             if(selectedMaster) selectPhotographer(selectedMaster.id);
-             else buildPrompt();
-        }
-
-        // --- Core Logic ---
-        function initPhotographerList() {
-            const list = document.getElementById('photographer-list');
-            photographers.forEach(p => {
-                const div = document.createElement('div');
-                div.className = `photographer-btn p-3 rounded-xl cursor-pointer border border-transparent hover:bg-white dark:hover:bg-gray-800/80 transition-all flex items-center gap-3.5 group`;
-                div.setAttribute('data-id', p.id);
-                div.onclick = () => selectPhotographer(p.id);
-                div.innerHTML = `
-                    <div class="style-preview" style="background: ${p.gradient}"></div>
-                    <div class="flex-grow flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white transition-colors">${p.name}</span>
-                        <span class="arrow text-[10px] text-black dark:text-white opacity-0 transition-opacity">●</span>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        function selectPhotographer(id) {
-            selectedMaster = photographers.find(p => p.id === id);
-            
-            // UI Update
-            document.querySelectorAll('.photographer-btn').forEach(b => {
-                b.classList.remove('selected');
-                if(b.getAttribute('data-id') === id) b.classList.add('selected');
-            });
-
-            // Text Update using innerHTML to render bold tags
-            document.getElementById('master-name').innerText = selectedMaster.name;
-            document.getElementById('master-desc').innerHTML = selectedMaster.desc;
-            document.getElementById('spec-cam').innerText = selectedMaster.valCam;
-            document.getElementById('spec-film').innerText = selectedMaster.valFilm;
-            document.getElementById('spec-light').innerText = selectedMaster.valLight;
-            document.getElementById('spec-focus').innerText = selectedMaster.valFocus;
-            
-            // Dynamic Negative Update
-            const baseNeg = "3d render, cgi, plastic skin, doll-like, airbrushed, oversaturated, hdr, watermark";
-            const fullNeg = `${baseNeg}, ${selectedMaster.negContext}`;
-            document.getElementById('spec-negative').innerText = fullNeg;
-            document.getElementById('negative-preview').innerText = fullNeg;
-
-            updateChart(selectedMaster);
-            
-            // Auto-Fill Form
-            setSelectValue('select-camera', selectedMaster.valCam);
-            setSelectValue('select-light', selectedMaster.valLight);
-            setSelectValue('select-film', selectedMaster.valFilm);
-            setSelectValue('select-aperture', ""); 
-            setSelectValue('select-framing', ""); 
-            
-            // Fields left empty for user input
-            
-            setRatio(selectedMaster.recAR || "3:2");
-            setTone('default'); 
-            buildPrompt();
-        }
-
-        function setSelectValue(id, value) {
-            const el = document.getElementById(id);
-            if(!el) return;
-            for(let i=0; i<el.options.length; i++) {
-                if(el.options[i].value === value) {
-                    el.selectedIndex = i;
-                    return;
+                if (living && selectedEngine === 'chatgpt') {
+                    el.className = 'text-[10px] text-amber-400 mt-3 leading-relaxed';
+                    el.textContent = "⚠ " + selectedMaster.name + " è vivente: ChatGPT rifiuta per policy i riferimenti allo stile di artisti viventi. Su Gemini e Midjourney di norma passa.";
+                } else {
+                    el.className = 'text-[10px] text-gray-500 mt-3 leading-relaxed';
+                    el.textContent = "Il nome del maestro entra nel prompt. Efficace, ma delega tutto al modello: hai meno controllo fine.";
                 }
             }
         }
 
+        function renderRatios() {
+            const eng = engines[selectedEngine];
+            const grid = document.getElementById('ar-grid');
+            grid.innerHTML = '';
+            if (!eng.ratios.includes(selectedAR)) selectedAR = eng.ratios[0];
+            eng.ratios.forEach(r => {
+                const b = document.createElement('button');
+                b.className = 'ar-btn py-2.5 border border-gray-700 rounded-lg text-xs hover:bg-gray-800 transition-colors';
+                b.textContent = r;
+                b.onclick = () => setRatio(r);
+                if (r === selectedAR) b.classList.add('selected');
+                grid.appendChild(b);
+            });
+            applyRatioPreview();
+        }
+
         function setRatio(ratio) {
             selectedAR = ratio;
-            document.querySelectorAll('.ar-btn').forEach(b => b.classList.remove('selected'));
-            document.querySelectorAll('.ar-btn').forEach(b => {
-                if(b.innerText.includes(ratio)) b.classList.add('selected');
-            });
-            
-            // Visualizer
-            const box = document.getElementById('ratio-preview-box');
-            const label = document.getElementById('ar-label');
-            label.innerText = ratio;
-            
-            let w=40, h=40;
-            if(ratio==='1:1') { w=40; h=40; }
-            if(ratio==='3:2') { w=60; h=40; }
-            if(ratio==='4:5') { w=32; h=40; }
-            if(ratio==='16:9') { w=70; h=39; }
-            box.style.width = w+'px'; box.style.height = h+'px';
-            
+            document.querySelectorAll('.ar-btn').forEach(b => b.classList.toggle('selected', b.textContent === ratio));
+            applyRatioPreview();
             buildPrompt();
+        }
+
+        function applyRatioPreview() {
+            document.getElementById('ar-label').innerText = selectedAR;
+            const box = document.getElementById('ratio-preview-box');
+            const [w, h] = selectedAR.split(':').map(Number);
+            const max = 56;
+            const scale = max / Math.max(w, h);
+            box.style.width = (w * scale) + 'px';
+            box.style.height = (h * scale) + 'px';
         }
 
         function setTone(t) {
             selectedTone = t;
             document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById('btn-tone-'+t).classList.add('selected');
+            document.getElementById('btn-tone-' + t).classList.add('selected');
             buildPrompt();
         }
 
-        // --- Builder Logic ---
-        function initBuilderListeners() {
-            // Safety check for all potential inputs
-            const ids = ['input-subject', 'input-action', 'select-camera', 'select-light', 'select-film', 'select-aperture', 'input-text', 'ref-image-mode', 'ref-image-url', 'select-framing'];
-            ids.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.addEventListener('input', () => buildPrompt(false));
-                if(el && id === 'ref-image-mode') el.addEventListener('change', () => buildPrompt(false));
+        function toggleRefInput() {
+            const mode = document.getElementById('ref-image-mode').value;
+            const eng = engines[selectedEngine];
+            const urlInput = document.getElementById('ref-mj-url');
+            const note = document.getElementById('ref-note');
+
+            // Il campo URL serve solo a Midjourney: è l'unico che scarica immagini da link.
+            const needsUrl = eng.flags && mode !== 'none';
+            urlInput.classList.toggle('hidden', !needsUrl);
+            if (!needsUrl) urlInput.value = '';
+
+            note.textContent = mode === 'none' ? '' : eng.refs[mode];
+            buildPrompt();
+        }
+
+        function resetBuilder() {
+            document.getElementById('input-subject').value = '';
+            document.getElementById('input-action').value = '';
+            document.getElementById('input-text').value = '';
+            document.getElementById('ref-image-mode').value = 'none';
+            document.getElementById('ref-mj-url').value = '';
+            document.getElementById('select-framing').value = '';
+            document.getElementById('select-aperture').value = '';
+            document.getElementById('merge-negative').checked = false;
+            setTone('default');
+            toggleRefInput();
+            if (selectedMaster) selectPhotographer(selectedMaster.id);
+        }
+
+        /* ============================================================
+           ARCHIVIO
+           ============================================================ */
+        function initPhotographerList() {
+            const list = document.getElementById('photographer-list');
+            photographers.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = 'photographer-btn w-full text-left px-3 py-3 rounded-lg flex items-center gap-3';
+                btn.dataset.id = p.id;
+                btn.onclick = () => selectPhotographer(p.id);
+                btn.innerHTML =
+                    '<span class="style-preview" style="background:' + p.gradient + '"></span>' +
+                    '<span class="text-sm font-medium text-gray-700 dark:text-gray-200">' + p.name + '</span>';
+                list.appendChild(btn);
             });
         }
 
-        function buildPrompt(isOptimized = false) {
-            if(isOptimized && document.getElementById('prompt-output').value) return;
+        function selectPhotographer(id) {
+            const m = photographers.find(p => p.id === id);
+            if (!m) return;
+            selectedMaster = m;
 
-            const subject = document.getElementById('input-subject').value || "[Soggetto]";
-            const action = document.getElementById('input-action').value;
-            const cam = document.getElementById('select-camera').value;
-            const light = document.getElementById('select-light').value;
-            
-            // Ref Image Logic
-            const refMode = document.getElementById('ref-image-mode').value;
-            const refUrl = document.getElementById('ref-image-url').value;
-            let refInstruction = "";
-            
-            if (refMode === 'upload') {
-                refInstruction = "[ISTRUZIONE PER AI: L'utente allegherà un'immagine. USA QUELL'IMMAGINE come riferimento principale per la composizione/struttura, applicando lo stile descritto sotto.] ";
-            } else if (refMode === 'url' && refUrl) {
-                refInstruction = `[REFERENCE IMAGE URL: ${refUrl}] [INSTRUCTION: Use this image URL as composition reference.] `;
-            }
+            document.querySelectorAll('.photographer-btn').forEach(b =>
+                b.classList.toggle('selected', b.dataset.id === id));
 
-            // Safe access for elements
-            const filmEl = document.getElementById('select-film');
-            let film = filmEl ? filmEl.value : "";
-            
-            const apertureEl = document.getElementById('select-aperture');
-            let aperture = apertureEl ? apertureEl.value : "";
-            
-            const framingEl = document.getElementById('select-framing');
-            let framing = framingEl ? framingEl.value : "";
-            
-            const textEl = document.getElementById('input-text');
-            let textOverlay = textEl ? textEl.value : "";
+            document.getElementById('master-name').innerText = m.name;
+            document.getElementById('master-status').innerText = m.living ? 'Autore vivente' : 'Autore storico';
+            document.getElementById('master-desc').innerHTML = m.desc;
+            document.getElementById('spec-cam').innerText = m.valCam;
+            document.getElementById('spec-film').innerText = m.valFilm;
+            document.getElementById('spec-light').innerText = m.valLight;
+            document.getElementById('spec-focus').innerText = m.valFocus;
+            document.getElementById('spec-signature').innerText = m.signature;
 
-            // Tone Override Logic
-            if(selectedTone === 'bw') film = "Black and white photography, monochrome, " + film.replace('Color', '').replace('Kodachrome', '');
-            if(selectedTone === 'color') film = "Color photography, " + film.replace('Black and white', '');
+            setSelectValue('select-camera', m.valCam);
+            setSelectValue('select-light', m.valLight);
+            setSelectValue('select-film', m.valFilm);
+            document.getElementById('input-subject').value = m.defaultSubject;
+            document.getElementById('input-action').value = m.defaultAction;
 
-            // MODIFIED: Removed photographer name reference, using only technical parameters
-            let p = `${refInstruction}`;
-            p += `Subject: ${subject}. `;
-            if(action) p += `Action/Context: ${action}. `;
-            if(framing) p += `Framing: ${framing}. `;
-            if(textOverlay) p += `Text Overlay: The text "${textOverlay}" is clearly visible. `;
-            if(cam) p += `Camera: ${cam}. `;
-            if(aperture) p += `Aperture: ${aperture}. `;
-            if(light) p += `Lighting: ${light}. `;
-            if(film) p += `Film/Medium: ${film}. `;
-            p += `4K resolution, photorealistic.`;
-            
-            if(selectedAR) p += ` --ar ${selectedAR}`;
-            
-            // Append Negative if checked
-            if(document.getElementById('merge-negative').checked) {
-                const baseNeg = "3d render, cgi, plastic skin, doll-like, airbrushed, oversaturated, hdr, watermark";
-                const contextNeg = selectedMaster ? selectedMaster.negContext : "";
-                p += ` --no ${baseNeg}, ${contextNeg}`;
-            }
+            if (engines[selectedEngine].ratios.includes(m.recAR)) setRatio(m.recAR);
 
-            document.getElementById('prompt-output').value = p;
+            updateChart(m);
+            updateAttrNote();
+            buildPrompt();
         }
 
-        // --- Chart.js ---
+        function setSelectValue(id, value) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const found = Array.from(sel.options).some(o => o.value === value);
+            sel.value = found ? value : '';
+        }
+
+        /* ============================================================
+           CHART
+           ============================================================ */
         function initChart() {
             const ctx = document.getElementById('styleRadarChart').getContext('2d');
             currentChart = new Chart(ctx, {
@@ -978,7 +1331,7 @@
                     labels: ['Contrasto', 'Saturazione', 'Grana', 'Realismo', 'Messa in Scena'],
                     datasets: [{
                         data: [0,0,0,0,0],
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)', // Use blue for better visibility
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
                         borderColor: 'rgba(59, 130, 246, 1)',
                         borderWidth: 2, pointRadius: 2,
                         pointBackgroundColor: 'rgba(59, 130, 246, 1)'
@@ -988,7 +1341,7 @@
                     responsive: true, maintainAspectRatio: false,
                     scales: {
                         r: {
-                            angleLines: { color: 'rgba(156, 163, 175, 0.2)' }, // lighter grey
+                            angleLines: { color: 'rgba(156, 163, 175, 0.2)' },
                             grid: { color: 'rgba(156, 163, 175, 0.2)' },
                             pointLabels: { font: { size: 11, family: 'Inter' }, color: '#6b7280' },
                             min: 0, max: 100, ticks: { display: false, stepSize: 25 }
@@ -1003,101 +1356,263 @@
             currentChart.update();
         }
 
-        // --- AI Features ---
-        async function generateIdea() {
-            if(!apiKey) { openSettings(); return; }
-            const btn = document.getElementById('idea-icon');
-            btn.innerHTML = '<div class="loader"></div>';
-            
-            try {
-                const prompt = `Sei un photo editor. Suggerisci UN SOLO soggetto (in inglese) per una foto con queste caratteristiche tecniche: Camera: ${selectedMaster.valCam}, Luce: ${selectedMaster.valLight}, Pellicola: ${selectedMaster.valFilm}. Solo il soggetto, niente altro.`;
-                const res = await callGemini(prompt);
-                if(res) {
-                    document.getElementById('input-subject').value = res.trim();
-                    buildPrompt();
+        /* ============================================================
+           COSTRUZIONE DEL PROMPT
+           ============================================================ */
+        function initBuilderListeners() {
+            ['input-subject','input-action','select-camera','select-light','select-film',
+             'select-aperture','input-text','select-framing','ref-mj-url','select-lang'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('input', () => buildPrompt());
+                el.addEventListener('change', () => buildPrompt());
+            });
+        }
+
+        function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+        function buildPrompt() {
+            const eng  = engines[selectedEngine];
+            const lang = val('select-lang') || 'en';
+            const it   = lang === 'it';
+
+            const subject  = val('input-subject') || (it ? '[Soggetto]' : '[subject]');
+            const action   = val('input-action');
+            const framing  = val('select-framing');
+            const overlay  = val('input-text');
+            const cam      = val('select-camera');
+            const aperture = val('select-aperture');
+            const light    = val('select-light');
+            const refMode  = val('ref-image-mode');
+            const refUrl   = val('ref-mj-url');
+
+            let film = val('select-film');
+            if (selectedTone === 'bw')    film = 'black and white, monochrome' + (film ? ', ' + film.replace(/colou?r/gi, '').replace(/,\s*,/g, ',') : '');
+            if (selectedTone === 'color') film = 'colour photography' + (film ? ', ' + film.replace(/black and white/gi, '').replace(/,\s*,/g, ',') : '');
+            film = film.replace(/\s*,\s*$/, '').trim();
+
+            // --- Strato "maestro" ---
+            let masterLayer = '';
+            if (selectedMaster) {
+                if (selectedAttribution === 'grammar') masterLayer = selectedMaster.signature;
+                else if (selectedAttribution === 'name') masterLayer = 'in the photographic style of ' + selectedMaster.name + '; ' + selectedMaster.signature;
+            }
+
+            let p = '';
+
+            if (eng.style === 'keywords') {
+                /* ---------- MIDJOURNEY: keyword dense + flag ---------- */
+                const parts = [];
+                if (refMode === 'composition' && refUrl) parts.push(refUrl);
+                parts.push(subject);
+                if (action) parts.push(action);
+                if (framing) parts.push(framing);
+                if (overlay) parts.push('the text "' + overlay + '" clearly legible');
+                if (cam) parts.push(cam);
+                if (aperture) parts.push(aperture);
+                if (light) parts.push(light);
+                if (film) parts.push(film);
+                if (masterLayer) parts.push(masterLayer);
+                p = parts.map((s, i) => i === 0 ? cap(s) : lower(s)).join(', ');
+
+                p += ' --ar ' + selectedAR;
+                if (refMode === 'style' && refUrl)   p += ' --sref ' + refUrl;
+                if (refMode === 'subject' && refUrl) p += ' --oref ' + refUrl;
+                if (document.getElementById('merge-negative').checked && selectedMaster) {
+                    p += ' --no ' + selectedMaster.negMJ;
                 }
-            } catch(e) { alert("Errore AI: Controlla la chiave API"); }
-            btn.innerHTML = '✨';
+
+            } else {
+                /* ---------- CHATGPT / GEMINI: prosa descrittiva ---------- */
+                const compact = eng.style === 'prose-compact';
+                const S = [];
+
+                if (refMode !== 'none') {
+                    S.push(it
+                        ? 'Usa l\'immagine allegata come riferimento di ' +
+                          ({style:'stile', subject:'soggetto', composition:'composizione'}[refMode]) + '.'
+                        : 'Use the attached image as a ' + refMode + ' reference.');
+                }
+
+                // Frase 1: soggetto e azione
+                let s1 = (it ? 'Una fotografia di ' : 'A photograph of ') + lower(subject);
+                if (action) s1 += (it ? ', ' : ', ') + lower(action);
+                S.push(s1 + '.');
+
+                // Frase 2: inquadratura e ottica
+                const optics = [framing, cam, aperture].filter(Boolean).map(lower);
+                if (optics.length) {
+                    S.push((it ? 'Ripresa con ' : 'Shot on ') + optics.join(', ') + '.');
+                }
+
+                // Frase 3: luce e materia
+                const matter = [light, film].filter(Boolean).map(lower);
+                if (matter.length) {
+                    S.push((it ? 'Luce e resa: ' : 'Lit and rendered as ') + matter.join('; ') + '.');
+                }
+
+                // Frase 4: firma del maestro (omessa in modalità compatta se già molto lungo)
+                if (masterLayer && !(compact && S.join(' ').length > 380)) {
+                    S.push(cap(masterLayer) + '.');
+                }
+
+                if (overlay) {
+                    S.push(it
+                        ? 'Nell\'immagine è visibile e perfettamente leggibile il testo "' + overlay + '".'
+                        : 'The text "' + overlay + '" appears in the image, clearly rendered and legible.');
+                }
+
+                if (eng.style !== 'prose-compact' || S.length < 6) {
+                    S.push(it
+                        ? 'Una fotografia vera, non un rendering: materiali con la loro texture, imperfezioni naturali, granulosità della pellicola.'
+                        : 'A real photograph, not a render: authentic material texture, natural imperfections, visible film grain.');
+                }
+
+                if (selectedEngine === 'chatgpt') {
+                    S.push(it ? 'Formato ' + selectedAR + '.' : 'Aspect ratio ' + selectedAR + '.');
+                }
+
+                p = S.join(' ');
+            }
+
+            document.getElementById('prompt-output').value = p;
+            updateOutputHint(it);
+        }
+
+        /* Soggetto e azione li scrive l'utente: restano nella sua lingua
+           finché l'ottimizzatore non li riscrive. Meglio dirlo che nasconderlo. */
+        function updateOutputHint(it) {
+            const eng = engines[selectedEngine];
+            const mixed = !it && /[àèéìòùÀÈÉÌÒÙ]|\b(un|una|il|la|che|con|nel|della|degli)\b/i
+                                 .test(val('input-subject') + ' ' + val('input-action'));
+            document.getElementById('output-hint').textContent =
+                eng.hint + (mixed ? ' — Soggetto e azione sono ancora in italiano: premi «Ottimizza» per tradurli e rifinire il testo.' : '');
+        }
+
+        function lower(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+        function cap(s)   { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+        /* ============================================================
+           FUNZIONI AI
+           ============================================================ */
+        async function callAI(system, user) {
+            const key = getKey();
+            if (!key) { openSettings(); throw new Error('__nokey__'); }
+            const p = providers[provider];
+            const model = localStorage.getItem('atelier_model_' + provider) || p.models[0][0];
+            try {
+                return await p.call(model, key, system, user);
+            } catch (e) {
+                if (e instanceof TypeError) {
+                    throw new Error("Impossibile raggiungere " + p.label +
+                        ". Può essere la connessione, oppure il fornitore che blocca le chiamate dirette dal browser (capita con OpenAI). Prova con Claude o Gemini.");
+                }
+                throw e;
+            }
+        }
+
+        function reportError(e) {
+            if (e && e.message === '__nokey__') return;
+            console.error(e);
+            alert(e && e.message ? e.message : "Errore sconosciuto.");
+        }
+
+        async function generateIdea() {
+            const icon = document.getElementById('idea-icon');
+            const prev = icon.innerHTML;
+            icon.innerHTML = '<div class="loader"></div>';
+            try {
+                const m = selectedMaster;
+                const sys = "Sei un photo editor. Rispondi con UN SOLO soggetto fotografico, in italiano, in una riga, senza virgolette e senza commenti.";
+                const usr = "Suggerisci un soggetto coerente con questo assetto tecnico:\n" +
+                            "Camera: " + (m ? m.valCam : '-') + "\n" +
+                            "Luce: " + (m ? m.valLight : '-') + "\n" +
+                            "Pellicola: " + (m ? m.valFilm : '-') + "\n" +
+                            "Firma visiva: " + (m ? m.signature : '-');
+                const res = await callAI(sys, usr);
+                document.getElementById('input-subject').value = res.split('\n')[0].replace(/^["'\-\s]+|["'\s]+$/g, '');
+                buildPrompt();
+            } catch (e) { reportError(e); }
+            icon.innerHTML = prev;
         }
 
         async function optimizePrompt() {
-            if(!apiKey) { openSettings(); return; }
-            const txt = document.getElementById('prompt-output').value;
+            const eng = engines[selectedEngine];
+            const txt = document.getElementById('prompt-output').value.trim();
+            if (!txt) return;
+
             const btnIcon = document.getElementById('opt-icon');
-            const btnTxt = document.getElementById('opt-text');
-            
+            const btnTxt  = document.getElementById('opt-text');
+            const prevIcon = btnIcon.innerHTML;
             btnIcon.innerHTML = '<div class="loader"></div>';
-            btnTxt.innerText = "Ottimizzando...";
-            
+            btnTxt.innerText = 'Ottimizzo...';
+
             try {
-                // Remove --ar and --no for optimization
-                let cleanTxt = txt.split('--ar')[0].split('--no')[0];
-                
-                // Get ref mode to pass correct instruction
-                const refMode = document.getElementById('ref-image-mode').value;
-                let refContext = "";
-                if(refMode === 'upload') refContext = "IMPORTANT: The user will provide a reference image. Ensure the prompt starts with [INSTRUCTION: Use attached image...].";
-                
-                let sys = `Act as a Prompt Engineer for image generation AI. Rewrite the user prompt to be highly photorealistic and technically precise.
-                Rules:
-                1. Translate Italian to English.
-                2. Keep structure: [Ref Instruction] [Subject] [Action] [Framing] [Camera] [Light] [Film].
-                3. Add sensory details (texture, atmosphere).
-                4. Respect aperture choice if present.
-                5. ${refContext}
-                6. DO NOT include any photographer names or "in the style of" references.
-                7. Output ONLY the prompt string.`;
-                
-                const res = await callGemini(cleanTxt, sys);
-                if(res) {
-                    let final = res.trim();
-                    // Re-append technical flags
-                    if(selectedAR) final += ` --ar ${selectedAR}`;
-                    if(document.getElementById('merge-negative').checked) {
-                         const baseNeg = "3d render, cgi, plastic skin, doll-like, airbrushed, oversaturated, hdr, watermark";
-                         const contextNeg = selectedMaster ? selectedMaster.negContext : "";
-                         final += ` --no ${baseNeg}, ${contextNeg}`;
-                    }
-                    document.getElementById('prompt-output').value = final;
-                    saveToHistory(final);
+                // I flag Midjourney vanno protetti dalla riscrittura.
+                let flags = '';
+                let body = txt;
+                if (eng.flags) {
+                    const i = txt.search(/\s--(ar|no|sref|oref|stylize|chaos)\b/);
+                    if (i > -1) { flags = txt.slice(i); body = txt.slice(0, i); }
                 }
-            } catch(e) { alert("Errore AI: Controlla la chiave API"); console.log(e); }
-            
-            btnIcon.innerHTML = '⚡';
-            btnTxt.innerText = "Ottimizza con Gemini";
+
+                const lang = val('select-lang') === 'it' ? 'italiano' : 'inglese';
+                let sys;
+
+                if (eng.style === 'keywords') {
+                    sys = "Sei un prompt engineer per Midjourney v8. Riscrivi il prompt come sequenza densa di clausole separate da virgole, " +
+                          "in " + lang + ", dal generale al particolare. Mantieni ogni dettaglio tecnico esistente (ottica, apertura, luce, pellicola). " +
+                          "Non usare frasi complete. Non aggiungere flag (--ar, --no, ecc.). Restituisci SOLO il prompt.";
+                } else {
+                    sys = "Sei un prompt engineer per i generatori di immagini 2026 (" + eng.label + "), che premiano la prosa descrittiva e non le liste di keyword. " +
+                          "Riscrivi il prompt in " + lang + " come descrizione fotografica scorrevole e concreta. " +
+                          "Regole: (1) mantieni ogni parametro tecnico presente (ottica, apertura, luce, pellicola, formato); " +
+                          "(2) aggiungi dettagli sensoriali di texture, materia e atmosfera; " +
+                          "(3) esprimi tutto in positivo — descrivi ciò che deve esserci, mai ciò che non deve esserci; " +
+                          "(4) non usare la sintassi Midjourney (--ar, --no) perché questo motore non la interpreta; " +
+                          (eng.style === 'prose-compact' ? "(5) resta entro 120 parole: questo modello perde vincoli sui prompt troppo lunghi; " : "(5) puoi articolare fino a 200 parole; ") +
+                          "(6) restituisci SOLO il prompt, senza preamboli né virgolette.";
+                }
+
+                const res = await callAI(sys, body);
+                const final = res.trim() + flags;
+                document.getElementById('prompt-output').value = final;
+                saveToHistory(final);
+            } catch (e) { reportError(e); }
+
+            btnIcon.innerHTML = prevIcon;
+            btnTxt.innerText = 'Ottimizza';
         }
 
-        async function callGemini(userMsg, sysMsg = "") {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${savedModel}:generateContent?key=${apiKey}`;
-            const body = {
-                contents: [{ parts: [{ text: userMsg }] }]
-            };
-            if(sysMsg) body.systemInstruction = { parts: [{ text: sysMsg }] };
-            
-            const req = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
-            const res = await req.json();
-            return res.candidates?.[0]?.content?.parts?.[0]?.text;
-        }
-
-        // --- Utils ---
-        function copyPrompt() {
+        /* ============================================================
+           UTILITÀ
+           ============================================================ */
+        async function copyPrompt() {
             const t = document.getElementById('prompt-output').value;
-            navigator.clipboard.writeText(t);
+            if (!t) return;
+            const label = document.getElementById('copy-label');
+            try {
+                await navigator.clipboard.writeText(t);
+                label.innerText = 'Copiato ✓';
+            } catch {
+                label.innerText = 'Copia manuale';
+                document.getElementById('prompt-output').select();
+            }
             saveToHistory(t);
-            alert("Copiato!");
+            setTimeout(() => { label.innerText = 'Copia Tutto'; }, 1600);
         }
-        
+
         function saveToHistory(txt) {
-            if(!txt) return;
+            if (!txt) return;
             let h = JSON.parse(localStorage.getItem('atelier_hist') || '[]');
-            if(h[0] !== txt) {
+            if (h[0] !== txt) {
                 h.unshift(txt);
-                if(h.length > 10) h.pop();
+                if (h.length > 10) h.pop();
                 localStorage.setItem('atelier_hist', JSON.stringify(h));
                 loadHistoryUI();
             }
         }
-        
+
         function loadHistoryUI() {
             const h = JSON.parse(localStorage.getItem('atelier_hist') || '[]');
             const c = document.getElementById('history-list');
@@ -1106,28 +1621,24 @@
                 const d = document.createElement('div');
                 d.className = 'flex-shrink-0 w-48 bg-white dark:bg-gray-800 p-2.5 rounded-lg text-[10px] text-gray-600 dark:text-gray-300 truncate cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors shadow-sm';
                 d.innerText = t;
+                d.title = t;
                 d.onclick = () => { document.getElementById('prompt-output').value = t; };
                 c.appendChild(d);
             });
         }
 
-        // --- EXPORT FEATURE (NEW) ---
         function downloadHistory() {
             const h = JSON.parse(localStorage.getItem('atelier_hist') || '[]');
-            if(h.length === 0) { alert("Nessun prompt da salvare!"); return; }
-            
+            if (h.length === 0) { alert("Nessun prompt da salvare."); return; }
             const date = new Date().toISOString().split('T')[0];
-            const content = `ARCHIVIO PROMPT - MAESTRI DI LUCE\nData: ${date}\n\n` + h.join('\n\n-------------------\n\n');
-            
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
+            const body = "MAESTRI DI LUCE — Prompt salvati (" + date + ")\n\n" +
+                         h.map((t, i) => (i + 1) + ".\n" + t).join('\n\n---\n\n');
+            const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `atelier_history_${date}.txt`;
-            document.body.appendChild(a);
+            a.href = URL.createObjectURL(blob);
+            a.download = 'maestri-di-luce-' + date + '.txt';
             a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(a.href);
         }
     </script>
 </body>
