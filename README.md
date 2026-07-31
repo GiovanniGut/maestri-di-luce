@@ -42,6 +42,22 @@ peggiorano il risultato. L'app li emette solo dove servono.
 **Lingua.** Inglese (default, lessico tecnico più preciso) o italiano — i modelli 2026 lo
 reggono bene.
 
+## Il cassetto delle immagini di riferimento
+
+Trascini le foto nel riquadro e assegni a ciascuna un ruolo — **stile**, **personaggio**,
+**oggetto** o **composizione**. I contatori mostrano quanto manca al limite del motore
+scelto: Nano Banana accetta 3 riferimenti di stile, 4 personaggi e 10 oggetti, per un
+massimo di 14 immagini, e l'app avvisa in rosso quando lo superi. Il prompt si aggiorna da
+solo — *"In allegato: un riferimento di stile e due di personaggio…"* — perché al modello
+va detto quante immagini riceve e con che ruolo.
+
+**Le immagini non vengono spedite a nessuno.** Restano nel tuo browser come miniature
+(lato lungo 160px, pochi kB l'una) e servono a ricordarti quali file allegare quando apri
+ChatGPT o Gemini. Sopravvivono alla chiusura della pagina.
+
+Midjourney fa eccezione: è l'unico che lavora con i link, quindi in quella modalità al
+posto del riquadro compaiono i campi URL, che finiscono nel prompt come `--sref` e `--oref`.
+
 ## Niente negative prompt
 
 ChatGPT e Gemini non supportano i negative prompt, e scrivere *"no plastic skin"* nel

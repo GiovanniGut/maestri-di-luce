@@ -422,23 +422,48 @@
                                 <input type="text" id="input-subject" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Un pescatore anziano che ripara le reti...">
                             </div>
 
-                            <!-- REFERENCE IMAGE / ACTION ROW -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1.5">Azione / Contesto</label>
-                                    <input type="text" id="input-action" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Al porto, nebbia...">
+                            <div>
+                                <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1.5">Azione / Contesto</label>
+                                <input type="text" id="input-action" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Al porto, nebbia...">
+                            </div>
+
+                            <!-- IMMAGINI DI RIFERIMENTO -->
+                            <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
+                                <div class="flex justify-between items-center mb-3 gap-3">
+                                    <label class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Immagini di riferimento</label>
+                                    <button onclick="clearRefs()" id="ref-clear" class="text-[10px] text-gray-500 hover:text-red-400 px-2 py-1 rounded transition-colors hidden">Svuota</button>
                                 </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1.5">Immagini di riferimento</label>
-                                    <select id="ref-image-mode" onchange="toggleRefInput()" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3.5 text-xs text-gray-300 outline-none focus:border-pink-500 transition-all">
-                                        <option value="none">Nessuna immagine</option>
-                                        <option value="style">Riferimento di stile</option>
-                                        <option value="subject">Riferimento di soggetto / personaggio</option>
-                                        <option value="composition">Riferimento di composizione</option>
-                                    </select>
-                                    <input type="text" id="ref-mj-url" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 mt-2 text-xs text-white outline-none placeholder-gray-600 hidden transition-all" placeholder="URL immagine per --sref / --oref">
-                                    <p id="ref-note" class="text-[10px] text-gray-500 mt-2 leading-relaxed"></p>
+
+                                <!-- Zona di rilascio (motori che accettano allegati) -->
+                                <div id="ref-dropzone" class="hidden">
+                                    <label for="ref-file-input" id="ref-drop-label"
+                                           class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-700 rounded-xl py-6 px-4 cursor-pointer hover:border-pink-500/60 hover:bg-white/[0.02] transition-colors text-center">
+                                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5V18a3 3 0 003 3h12a3 3 0 003-3v-1.5M12 3v13.5M12 3l-4 4M12 3l4 4"/></svg>
+                                        <span class="text-xs text-gray-400">Trascina qui le immagini</span>
+                                        <span class="text-[10px] text-gray-600">oppure tocca per scegliere i file</span>
+                                    </label>
+                                    <input type="file" id="ref-file-input" accept="image/*" multiple class="hidden">
                                 </div>
+
+                                <!-- Campi URL (solo Midjourney, che lavora con i link) -->
+                                <div id="ref-urls" class="hidden space-y-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">URL stile <span class="font-mono text-gray-600">--sref</span></label>
+                                        <input type="text" id="ref-url-sref" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-xs text-white outline-none placeholder-gray-600 focus:border-pink-500 transition-all" placeholder="https://...">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">URL personaggio <span class="font-mono text-gray-600">--oref</span></label>
+                                        <input type="text" id="ref-url-oref" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-xs text-white outline-none placeholder-gray-600 focus:border-pink-500 transition-all" placeholder="https://...">
+                                    </div>
+                                </div>
+
+                                <!-- Miniature -->
+                                <div id="ref-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4"></div>
+
+                                <!-- Contatori -->
+                                <div id="ref-counters" class="flex flex-wrap gap-x-4 gap-y-1 mt-4"></div>
+
+                                <p id="ref-note" class="text-[10px] text-gray-500 mt-3 leading-relaxed"></p>
                             </div>
 
                             <!-- COMPOSITION / FRAMING -->
@@ -578,7 +603,10 @@
                             </div>
 
                             <!-- Text Area -->
-                            <textarea id="prompt-output" spellcheck="false" class="w-full flex-grow min-h-[280px] p-6 text-gray-800 dark:text-gray-200 bg-white dark:bg-darkcard font-mono text-sm leading-relaxed resize-none outline-none transition-colors rounded-b-2xl"></textarea>
+                            <!-- max-h: senza tetto la textarea si stira all'altezza
+                                 della colonna dei controlli, lasciando centinaia di
+                                 pixel vuoti sotto il testo. -->
+                            <textarea id="prompt-output" spellcheck="false" class="w-full flex-grow min-h-[280px] max-h-[460px] p-6 text-gray-800 dark:text-gray-200 bg-white dark:bg-darkcard font-mono text-sm leading-relaxed resize-y outline-none transition-colors rounded-b-2xl"></textarea>
 
                             <!-- Footer -->
                             <div class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 p-4">
@@ -757,11 +785,9 @@
                 style: 'prose',
                 flags: false,
                 ratios: ['1:1','3:2','2:3','4:5','16:9','9:16','3:1','1:3'],
-                refs: {
-                    style: "Allega l'immagine in chat e scrivi: «usa questa come riferimento di stile». Non incollare URL: ChatGPT non li scarica.",
-                    subject: "Allega l'immagine: GPT Image 2 mantiene il personaggio coerente anche su più immagini generate insieme.",
-                    composition: "Allega l'immagine e chiedi esplicitamente di conservarne l'impianto compositivo."
-                },
+                refKind: 'files',
+                refLimits: { style: null, character: null, object: null, composition: null },
+                refNote: "Allega questi file nella chat di ChatGPT. Non incollare URL: non li scarica. Con la modalità Thinking mantiene personaggi e oggetti coerenti sull'intero gruppo di immagini generate.",
                 note: "Ragionamento nativo, testo leggibile, fino a 8 immagini coerenti, 2K. Nessun flag: il formato si chiede a parole o dal menu.",
                 arNote: "Su ChatGPT il formato va chiesto a parole. Il rapporto scelto viene scritto in coda al prompt come istruzione, non come flag.",
                 hint: "Incolla in ChatGPT. Per i risultati migliori attiva la modalità «Thinking» (Plus/Pro/Business): pianifica il layout e verifica il risultato."
@@ -772,11 +798,9 @@
                 style: 'prose-compact',
                 flags: false,
                 ratios: ['1:1','3:2','2:3','3:4','4:3','4:5','5:4','16:9','9:16','21:9'],
-                refs: {
-                    style: "Carica l'immagine come riferimento di stile (fino a 3 per generazione). Niente URL: il modello non li scarica.",
-                    subject: "Carica l'immagine come riferimento di soggetto: fino a 10 oggetti e 4 personaggi per generazione.",
-                    composition: "Carica l'immagine e descrivi cosa dell'impianto va conservato."
-                },
+                refKind: 'files',
+                refLimits: { style: 3, character: 4, object: 10, composition: null, total: 14 },
+                refNote: "Carica questi file nell'app Gemini o passali all'API. Niente URL: il modello non li scarica. I limiti per generazione sono 3 riferimenti di stile, 4 personaggi e 10 oggetti, per un massimo di 14 immagini.",
                 note: "Veloce ed economico. Regge fino a 4K e 14 immagini di riferimento, ma perde colpi sui prompt troppo lunghi: qui l'app scrive in forma condensata.",
                 arNote: "Su Gemini il rapporto è un parametro (aspect ratio), non testo. Scegli il formato dal menu dell'app Gemini o via API.",
                 hint: "Modello: gemini-3.1-flash-image. Incolla nell'app Gemini o nell'API, e ricorda di impostare il formato dal menu, non nel testo. Le immagini portano il watermark SynthID."
@@ -787,11 +811,9 @@
                 style: 'prose',
                 flags: false,
                 ratios: ['1:1','3:2','2:3','3:4','4:3','4:5','5:4','16:9','9:16','21:9'],
-                refs: {
-                    style: "Carica l'immagine come riferimento di stile (fino a 3 per generazione).",
-                    subject: "Carica l'immagine come riferimento di soggetto: fino a 10 oggetti e 4 personaggi.",
-                    composition: "Carica l'immagine e descrivi cosa dell'impianto va conservato."
-                },
+                refKind: 'files',
+                refLimits: { style: 3, character: 4, object: 10, composition: null, total: 14 },
+                refNote: "Carica questi file nell'app Gemini o passali all'API. I limiti per generazione sono 3 riferimenti di stile, 4 personaggi e 10 oggetti, per un massimo di 14 immagini. Il Pro è il più fedele nel conservare volti e loghi.",
                 note: "Qualità studio, 4K, testo affidabile, ancoraggio ai fatti tramite Search. Ragiona prima di disegnare: qui il prompt può essere lungo e stratificato.",
                 arNote: "Su Gemini il rapporto è un parametro (aspect ratio), non testo. Scegli il formato dal menu dell'app Gemini o via API.",
                 hint: "Modello: gemini-3-pro-image. Incolla nell'app Gemini o nell'API. Costa circa 0,13 $ a immagine: è il motore da usare quando il risultato deve essere definitivo."
@@ -802,11 +824,9 @@
                 style: 'keywords',
                 flags: true,
                 ratios: ['1:1','3:2','2:3','4:5','16:9','9:16','21:9','3:4'],
-                refs: {
-                    style: "Incolla l'URL dell'immagine: verrà aggiunto come --sref (riferimento di stile).",
-                    subject: "Incolla l'URL dell'immagine: verrà aggiunto come --oref (omni reference, coerenza di soggetto).",
-                    composition: "Incolla l'URL: verrà messo in testa al prompt come immagine di riferimento."
-                },
+                refKind: 'urls',
+                refLimits: null,
+                refNote: "Midjourney è l'unico che lavora con i link, non con i file: gli URL vanno incollati qui e finiscono nel prompt come --sref e --oref. Le immagini devono essere raggiungibili pubblicamente.",
                 note: "L'unico dei tre che usa davvero i flag: --ar, --no, --sref, --oref, --stylize. Preferisce keyword dense alla prosa.",
                 arNote: "Su Midjourney il rapporto è il flag --ar, che l'app aggiunge automaticamente in coda.",
                 hint: "Incolla in Discord o sul sito Midjourney. Qui i flag servono davvero: --no funziona solo su questo motore."
@@ -1066,9 +1086,11 @@
            INIT
            ============================================================ */
         document.addEventListener('DOMContentLoaded', () => {
+            loadRefs();
             initPhotographerList();
             initChart();
             initBuilderListeners();
+            initRefListeners();
             setEngine(selectedEngine, true);
             setAttribution(selectedAttribution, true);
             selectPhotographer('adams');
@@ -1164,7 +1186,7 @@
             if (!eng.flags) document.getElementById('merge-negative').checked = false;
 
             renderRatios();
-            toggleRefInput();
+            renderRefs();
             if (!silent) buildPrompt();
         }
 
@@ -1237,32 +1259,188 @@
             buildPrompt();
         }
 
-        function toggleRefInput() {
-            const mode = document.getElementById('ref-image-mode').value;
-            const eng = engines[selectedEngine];
-            const urlInput = document.getElementById('ref-mj-url');
-            const note = document.getElementById('ref-note');
+        /* ============================================================
+           IMMAGINI DI RIFERIMENTO
 
-            // Il campo URL serve solo a Midjourney: è l'unico che scarica immagini da link.
-            const needsUrl = eng.flags && mode !== 'none';
-            urlInput.classList.toggle('hidden', !needsUrl);
-            if (!needsUrl) urlInput.value = '';
+           È un cassetto, non un caricamento: le immagini restano in questo
+           browser e non vengono spedite a nessuno. Servono a ricordarti quali
+           file allegherai poi in ChatGPT o Gemini, e in che ruolo. Salviamo
+           solo una miniatura (lato lungo 160px) per stare largamente dentro
+           la quota del localStorage.
+           ============================================================ */
+        const REF_ROLES = {
+            style:       'Stile',
+            character:   'Personaggio',
+            object:      'Oggetto',
+            composition: 'Composizione'
+        };
+        const REF_THUMB_PX = 160;
+        let refImages = [];
 
-            note.textContent = mode === 'none' ? '' : eng.refs[mode];
+        function loadRefs() {
+            try { refImages = JSON.parse(localStorage.getItem('atelier_refs') || '[]'); }
+            catch { refImages = []; }
+        }
+        function persistRefs() {
+            try { localStorage.setItem('atelier_refs', JSON.stringify(refImages)); }
+            catch { /* quota piena: le miniature restano comunque in memoria */ }
+        }
+
+        /* Ridimensiona in un canvas prima di salvare: una foto da 4 MB
+           diventa una miniatura da pochi kB. */
+        function makeThumb(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Lettura del file non riuscita.'));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('Formato immagine non riconosciuto.'));
+                    img.onload = () => {
+                        const scale = Math.min(1, REF_THUMB_PX / Math.max(img.width, img.height));
+                        const c = document.createElement('canvas');
+                        c.width = Math.round(img.width * scale);
+                        c.height = Math.round(img.height * scale);
+                        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                        resolve(c.toDataURL('image/jpeg', 0.72));
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function addRefFiles(fileList) {
+            const files = [...fileList].filter(f => f.type.startsWith('image/'));
+            if (!files.length) return;
+            for (const f of files) {
+                try {
+                    refImages.push({
+                        id: 'r' + Date.now() + Math.random().toString(36).slice(2, 7),
+                        name: f.name,
+                        thumb: await makeThumb(f),
+                        role: 'style'
+                    });
+                } catch (e) { console.warn(f.name, e.message); }
+            }
+            persistRefs();
+            renderRefs();
             buildPrompt();
+        }
+
+        function setRefRole(id, role) {
+            const r = refImages.find(x => x.id === id);
+            if (r) { r.role = role; persistRefs(); renderRefs(); buildPrompt(); }
+        }
+        function removeRef(id) {
+            refImages = refImages.filter(x => x.id !== id);
+            persistRefs(); renderRefs(); buildPrompt();
+        }
+        function clearRefs() {
+            refImages = [];
+            persistRefs(); renderRefs(); buildPrompt();
+        }
+
+        function refCounts() {
+            const c = { style: 0, character: 0, object: 0, composition: 0 };
+            refImages.forEach(r => { c[r.role] = (c[r.role] || 0) + 1; });
+            return c;
+        }
+
+        function renderRefs() {
+            const eng = engines[selectedEngine];
+            const isFiles = eng.refKind === 'files';
+
+            document.getElementById('ref-dropzone').classList.toggle('hidden', !isFiles);
+            document.getElementById('ref-urls').classList.toggle('hidden', isFiles);
+            document.getElementById('ref-note').textContent = eng.refNote;
+
+            const list = document.getElementById('ref-list');
+            const counters = document.getElementById('ref-counters');
+            const clearBtn = document.getElementById('ref-clear');
+            list.innerHTML = '';
+            counters.innerHTML = '';
+
+            // In modalità URL le miniature non servono: Midjourney vuole link.
+            if (!isFiles) { clearBtn.classList.add('hidden'); return; }
+
+            clearBtn.classList.toggle('hidden', refImages.length === 0);
+
+            refImages.forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'relative bg-gray-800 rounded-xl overflow-hidden border border-gray-700 group';
+                card.innerHTML =
+                    '<img src="' + r.thumb + '" alt="' + escapeAttr(r.name) + '" class="w-full h-20 object-cover">' +
+                    '<select class="w-full bg-gray-900 text-[10px] text-gray-300 px-2 py-1.5 outline-none border-t border-gray-700">' +
+                        Object.entries(REF_ROLES).map(([v, l]) =>
+                            '<option value="' + v + '"' + (r.role === v ? ' selected' : '') + '>' + l + '</option>').join('') +
+                    '</select>' +
+                    '<button aria-label="Rimuovi" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white text-sm leading-none hover:bg-red-600 transition-colors">&times;</button>' +
+                    '<span class="block px-2 py-1 text-[9px] text-gray-500 truncate" title="' + escapeAttr(r.name) + '">' + escapeHtml(r.name) + '</span>';
+                card.querySelector('select').onchange = e => setRefRole(r.id, e.target.value);
+                card.querySelector('button').onclick = () => removeRef(r.id);
+                list.appendChild(card);
+            });
+
+            // Contatori: mostrano il tetto solo dove il motore ne dichiara uno.
+            const counts = refCounts();
+            const limits = eng.refLimits || {};
+            Object.entries(REF_ROLES).forEach(([key, label]) => {
+                const n = counts[key], cap = limits[key];
+                if (!n && !cap) return;
+                const over = cap != null && n > cap;
+                const s = document.createElement('span');
+                s.className = 'text-[10px] font-medium ' + (over ? 'text-red-400' : n ? 'text-gray-300' : 'text-gray-600');
+                s.textContent = label + ' ' + n + (cap != null ? '/' + cap : '');
+                counters.appendChild(s);
+            });
+            if (limits.total) {
+                const tot = refImages.length, over = tot > limits.total;
+                const s = document.createElement('span');
+                s.className = 'text-[10px] font-bold ' + (over ? 'text-red-400' : 'text-gray-500');
+                s.textContent = 'Totale ' + tot + '/' + limits.total;
+                counters.appendChild(s);
+            }
+            const problems = Object.entries(limits)
+                .filter(([k, cap]) => k !== 'total' && cap != null && counts[k] > cap)
+                .map(([k]) => REF_ROLES[k].toLowerCase());
+            if (problems.length || (limits.total && refImages.length > limits.total)) {
+                const w = document.createElement('span');
+                w.className = 'text-[10px] text-red-400 basis-full';
+                w.textContent = 'Oltre il limite di ' + engines[selectedEngine].label +
+                    ': le immagini in eccesso verranno ignorate dal modello.';
+                counters.appendChild(w);
+            }
+        }
+
+        function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+
+        function initRefListeners() {
+            const input = document.getElementById('ref-file-input');
+            const drop = document.getElementById('ref-drop-label');
+            input.addEventListener('change', e => { addRefFiles(e.target.files); input.value = ''; });
+            ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => {
+                e.preventDefault(); drop.classList.add('border-pink-500', 'bg-white/5');
+            }));
+            ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => {
+                e.preventDefault(); drop.classList.remove('border-pink-500', 'bg-white/5');
+            }));
+            drop.addEventListener('drop', e => {
+                if (e.dataTransfer && e.dataTransfer.files) addRefFiles(e.dataTransfer.files);
+            });
         }
 
         function resetBuilder() {
             document.getElementById('input-subject').value = '';
             document.getElementById('input-action').value = '';
             document.getElementById('input-text').value = '';
-            document.getElementById('ref-image-mode').value = 'none';
-            document.getElementById('ref-mj-url').value = '';
+            document.getElementById('ref-url-sref').value = '';
+            document.getElementById('ref-url-oref').value = '';
             document.getElementById('select-framing').value = '';
             document.getElementById('select-aperture').value = '';
             document.getElementById('merge-negative').checked = false;
+            clearRefs();
             setTone('default');
-            toggleRefInput();
             if (selectedMaster) selectPhotographer(selectedMaster.id);
         }
 
@@ -1361,7 +1539,8 @@
            ============================================================ */
         function initBuilderListeners() {
             ['input-subject','input-action','select-camera','select-light','select-film',
-             'select-aperture','input-text','select-framing','ref-mj-url','select-lang'].forEach(id => {
+             'select-aperture','input-text','select-framing','select-lang',
+             'ref-url-sref','ref-url-oref'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.addEventListener('input', () => buildPrompt());
@@ -1370,6 +1549,33 @@
         }
 
         function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+        /* Traduce il cassetto delle immagini in una frase esplicita: il modello
+           va detto quante immagini riceve e con che ruolo, altrimenti le tratta
+           tutte allo stesso modo. */
+        function buildRefSentence(it) {
+            if (engines[selectedEngine].refKind !== 'files' || !refImages.length) return '';
+            const c = refCounts();
+            const words = {
+                style:       [n => n === 1 ? 'un riferimento di stile'       : n + ' riferimenti di stile',
+                              n => n === 1 ? 'one style reference'           : n + ' style references'],
+                character:   [n => n === 1 ? 'un riferimento di personaggio' : n + ' riferimenti di personaggio',
+                              n => n === 1 ? 'one character reference'       : n + ' character references'],
+                object:      [n => n === 1 ? 'un riferimento di oggetto'     : n + ' riferimenti di oggetto',
+                              n => n === 1 ? 'one object reference'          : n + ' object references'],
+                composition: [n => n === 1 ? 'un riferimento di composizione': n + ' riferimenti di composizione',
+                              n => n === 1 ? 'one composition reference'     : n + ' composition references']
+            };
+            const list = Object.keys(REF_ROLES).filter(k => c[k]).map(k => words[k][it ? 0 : 1](c[k]));
+            if (!list.length) return '';
+            const joined = list.length === 1 ? list[0]
+                : list.slice(0, -1).join(', ') + (it ? ' e ' : ' and ') + list[list.length - 1];
+            // "In allegato:" evita i problemi di concordanza fra generi e numeri
+            // che nascerebbero da "sono allegate un riferimento...".
+            return it
+                ? 'In allegato: ' + joined + '. Usa queste immagini come indicato, conservando ciò che mostrano.'
+                : 'Attached: ' + joined + '. Use these images as indicated, preserving what they show.';
+        }
 
         function buildPrompt() {
             const eng  = engines[selectedEngine];
@@ -1383,8 +1589,8 @@
             const cam      = val('select-camera');
             const aperture = val('select-aperture');
             const light    = val('select-light');
-            const refMode  = val('ref-image-mode');
-            const refUrl   = val('ref-mj-url');
+            const srefUrl  = val('ref-url-sref');
+            const orefUrl  = val('ref-url-oref');
 
             let film = val('select-film');
             if (selectedTone === 'bw')    film = 'black and white, monochrome' + (film ? ', ' + film.replace(/colou?r/gi, '').replace(/,\s*,/g, ',') : '');
@@ -1403,7 +1609,6 @@
             if (eng.style === 'keywords') {
                 /* ---------- MIDJOURNEY: keyword dense + flag ---------- */
                 const parts = [];
-                if (refMode === 'composition' && refUrl) parts.push(refUrl);
                 parts.push(subject);
                 if (action) parts.push(action);
                 if (framing) parts.push(framing);
@@ -1416,8 +1621,8 @@
                 p = parts.map((s, i) => i === 0 ? cap(s) : lower(s)).join(', ');
 
                 p += ' --ar ' + selectedAR;
-                if (refMode === 'style' && refUrl)   p += ' --sref ' + refUrl;
-                if (refMode === 'subject' && refUrl) p += ' --oref ' + refUrl;
+                if (srefUrl) p += ' --sref ' + srefUrl;
+                if (orefUrl) p += ' --oref ' + orefUrl;
                 if (document.getElementById('merge-negative').checked && selectedMaster) {
                     p += ' --no ' + selectedMaster.negMJ;
                 }
@@ -1427,12 +1632,8 @@
                 const compact = eng.style === 'prose-compact';
                 const S = [];
 
-                if (refMode !== 'none') {
-                    S.push(it
-                        ? 'Usa l\'immagine allegata come riferimento di ' +
-                          ({style:'stile', subject:'soggetto', composition:'composizione'}[refMode]) + '.'
-                        : 'Use the attached image as a ' + refMode + ' reference.');
-                }
+                const refSentence = buildRefSentence(it);
+                if (refSentence) S.push(refSentence);
 
                 // Frase 1: soggetto e azione
                 let s1 = (it ? 'Una fotografia di ' : 'A photograph of ') + lower(subject);

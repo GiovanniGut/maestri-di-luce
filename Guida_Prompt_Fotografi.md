@@ -90,6 +90,14 @@ Se il risultato non convince, qui sai esattamente quale frase togliere.
 ⚠️ **ChatGPT e Gemini non scaricano immagini da un URL incollato nel prompt** — l'immagine
 va allegata. Midjourney è l'eccezione: lavora proprio con i link.
 
+**Dichiara sempre i ruoli.** Allegare quattro immagini senza dire cosa sono le fa trattare
+tutte allo stesso modo. Una riga in testa al prompt cambia il risultato:
+
+> *In allegato: un riferimento di stile, due riferimenti di personaggio e un riferimento
+> di oggetto. Usa queste immagini come indicato, conservando ciò che mostrano.*
+
+L'Atelier la scrive da solo in base a come hai etichettato le immagini nel cassetto.
+
 ---
 
 ## 5. Il testo dentro l'immagine, finalmente
