@@ -39,6 +39,25 @@
         .btn-hover { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-hover:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
+        /* Etichette e note: una sola voce grigia. Il colore resta libero
+           per gli stati attivi e per gli errori, che così si vedono davvero.
+           Il costruttore è sempre scuro, quindi non segue il tema. */
+        .fld {
+            display: block;
+            font-size: 11px; font-weight: 700; line-height: 1.3;
+            text-transform: uppercase; letter-spacing: .09em;
+            color: #94a3b8;
+        }
+        .note { font-size: 12px; line-height: 1.55; color: #94a3b8; }
+
+        /* Varianti per le zone che seguono il tema chiaro/scuro. */
+        .fld-t  { color: #64748b; }
+        .note-t { font-size: 12px; line-height: 1.55; color: #64748b; }
+        @media (prefers-color-scheme: dark) {
+            .fld-t  { color: #94a3b8; }
+            .note-t { color: #94a3b8; }
+        }
+
         /* Active States — questi pulsanti vivono solo nella sezione
            sempre scura del costruttore, quindi non seguono il tema. */
         .ar-btn.selected, .tone-btn.selected, .engine-btn.selected, .attr-btn.selected {
@@ -155,7 +174,7 @@
 
             <div class="space-y-5">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Fornitore</label>
+                    <label class="fld fld-t mb-1.5">Fornitore</label>
                     <select id="provider-select" onchange="onProviderChange()" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none transition-all">
                         <option value="anthropic">Anthropic (Claude)</option>
                         <option value="google">Google (Gemini)</option>
@@ -164,17 +183,17 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Modello</label>
+                    <label class="fld fld-t mb-1.5">Modello</label>
                     <select id="model-select" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none transition-all"></select>
                 </div>
 
                 <div>
                     <div class="flex justify-between items-end mb-1.5">
-                        <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Chiave API</label>
+                        <label class="fld fld-t">Chiave API</label>
                         <a id="key-link" href="#" target="_blank" rel="noopener" class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline">Dove la trovo?</a>
                     </div>
                     <input type="password" id="api-key-input" autocomplete="off" class="w-full border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm focus:ring-2 focus:ring-black dark:focus:ring-blue-500 outline-none dark:bg-gray-800 dark:text-white transition-all" placeholder="Incolla la tua chiave qui...">
-                    <p id="key-status" class="text-[10px] mt-1.5 text-gray-400"></p>
+                    <p id="key-status" class="note-t mt-1.5"></p>
                 </div>
 
                 <!-- GUIDA -->
@@ -260,7 +279,7 @@
                 <button onclick="closeCompare()" aria-label="Chiudi" class="text-gray-400 hover:text-black dark:hover:text-white text-2xl leading-none px-3 py-2 -mr-2 -mt-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0">&times;</button>
             </div>
             <div id="compare-grid" class="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
-            <p class="px-5 sm:px-6 pb-5 sm:pb-6 text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+            <p class="px-5 sm:px-6 pb-5 sm:pb-6 note-t leading-relaxed">
                 Gli stessi parametri, scritti come ciascun motore li capisce. I flag esistono solo su
                 Midjourney; su Gemini il formato è un parametro dell'app, non testo. Le differenze di
                 lunghezza sono volute: Nano Banana 2 perde vincoli sui prompt lunghi, il Pro no.
@@ -289,11 +308,20 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                    <!-- Sidebar List -->
+                    <!-- Sidebar List
+                         Su mobile la lista era una colonna nuda che sfumava nella
+                         scheda sottostante: qui diventa un riquadro con un bordo
+                         suo, e torna nuda solo da lg in su, dove è una barra
+                         laterale e lo stacco lo dà già il layout. -->
                     <div class="lg:col-span-3">
-                        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">L'Archivio (16)</h3>
-                        <div id="photographer-list" class="space-y-2 h-[340px] lg:h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-10">
-                            <!-- JS Generated -->
+                        <h3 class="fld fld-t mb-3 lg:mb-6">L'Archivio (16)</h3>
+                        <div class="relative rounded-2xl border border-gray-200 bg-gray-50/60 p-2 dark:border-gray-700 dark:bg-gray-800/30
+                                    lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:dark:bg-transparent">
+                            <div id="photographer-list" class="space-y-1.5 h-[300px] lg:h-[600px] overflow-y-auto custom-scrollbar pr-1 lg:pr-2 pb-2 lg:pb-10">
+                                <!-- JS Generated -->
+                            </div>
+                            <!-- sfumatura: dice che sotto c'è altro da scorrere -->
+                            <div class="pointer-events-none absolute inset-x-2 bottom-2 h-8 rounded-b-xl bg-gradient-to-t from-gray-50 to-transparent dark:from-[#1a2436] lg:hidden"></div>
                         </div>
                     </div>
 
@@ -316,7 +344,7 @@
                                 <canvas id="styleRadarChart"></canvas>
                             </div>
                             <div class="flex justify-between items-center gap-3 mt-2 min-h-[28px]">
-                                <p id="chart-hint" class="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
+                                <p id="chart-hint" class="note-t">
                                     Trascina i vertici per allontanarti dal maestro.
                                 </p>
                                 <button onclick="resetStyleOverride()" id="chart-reset" class="hidden text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 hover:underline px-2 py-1.5 rounded shrink-0">
@@ -329,26 +357,28 @@
                         <div class="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 flex flex-col justify-center space-y-8 transition-colors">
                             <div class="space-y-5">
                                 <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700/50 pb-3">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Camera System</span>
+                                    <span class="fld fld-t">Camera System</span>
                                     <span id="spec-cam" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
                                 </div>
                                 <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700/50 pb-3">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Emulsione</span>
+                                    <span class="fld fld-t">Emulsione</span>
                                     <span id="spec-film" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
                                 </div>
                                 <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700/50 pb-3">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Luce</span>
+                                    <span class="fld fld-t">Luce</span>
                                     <span id="spec-light" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Focus</span>
+                                    <span class="fld fld-t">Focus</span>
                                     <span id="spec-focus" class="text-sm font-semibold text-gray-900 dark:text-gray-200 text-right">-</span>
                                 </div>
                             </div>
 
-                            <div class="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-                                <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-2">Firma visiva (in positivo)</p>
-                                <p id="spec-signature" class="text-xs text-emerald-900 dark:text-emerald-200 break-words leading-relaxed">
+                            <!-- Pannello neutro: il senso lo portano le parole
+                                 "(in positivo)", non una tinta verde. -->
+                            <div class="bg-white dark:bg-gray-900/40 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                                <p class="fld fld-t mb-2">Firma visiva (in positivo)</p>
+                                <p id="spec-signature" class="text-xs text-gray-700 dark:text-gray-300 break-words leading-relaxed">
                                     -
                                 </p>
                             </div>
@@ -386,36 +416,36 @@
                 <!-- DESTINAZIONE / CITAZIONE / LINGUA -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
                     <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
-                        <label class="block text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3">Motore di destinazione</label>
+                        <label class="fld mb-3">Motore di destinazione</label>
                         <div class="grid grid-cols-2 gap-2">
                             <button onclick="setEngine('chatgpt')" id="btn-eng-chatgpt" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">ChatGPT&nbsp;2.0</button>
                             <button onclick="setEngine('nb2')" id="btn-eng-nb2" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">Nano&nbsp;Banana&nbsp;2</button>
                             <button onclick="setEngine('nbpro')" id="btn-eng-nbpro" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">Nano&nbsp;Banana&nbsp;Pro</button>
                             <button onclick="setEngine('mj')" id="btn-eng-mj" class="engine-btn py-2.5 border border-gray-700 rounded-lg text-[11px] hover:bg-gray-800 transition-colors">Midjourney&nbsp;v8</button>
                         </div>
-                        <p id="engine-note" class="text-[10px] text-gray-500 mt-3 leading-relaxed"></p>
-                        <button onclick="openCompare()" class="mt-3 w-full text-[11px] font-bold uppercase tracking-wider text-indigo-300 hover:text-white border border-indigo-500/40 hover:border-indigo-400 hover:bg-indigo-500/10 rounded-lg py-2.5 transition-colors">
+                        <p id="engine-note" class="note mt-3"></p>
+                        <button onclick="openCompare()" class="mt-3 w-full text-[11px] font-bold uppercase tracking-wider text-blue-300 hover:text-white border border-blue-500/40 hover:border-blue-400 hover:bg-blue-500/10 rounded-lg py-2.5 transition-colors">
                             Confronta i quattro motori
                         </button>
                     </div>
 
                     <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
-                        <label class="block text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-3">Citazione del maestro</label>
+                        <label class="fld mb-3">Citazione del maestro</label>
                         <div class="flex flex-col gap-2">
                             <button onclick="setAttribution('tech')" id="btn-attr-tech" class="attr-btn py-2.5 px-3 border border-gray-700 rounded-lg text-[11px] text-left hover:bg-gray-800 transition-colors">Solo tecnica</button>
                             <button onclick="setAttribution('grammar')" id="btn-attr-grammar" class="attr-btn py-2.5 px-3 border border-gray-700 rounded-lg text-[11px] text-left hover:bg-gray-800 transition-colors">Grammatica del maestro</button>
                             <button onclick="setAttribution('name')" id="btn-attr-name" class="attr-btn py-2.5 px-3 border border-gray-700 rounded-lg text-[11px] text-left hover:bg-gray-800 transition-colors">Citazione esplicita</button>
                         </div>
-                        <p id="attr-note" class="text-[10px] text-gray-500 mt-3 leading-relaxed"></p>
+                        <p id="attr-note" class="note mt-3"></p>
                     </div>
 
                     <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800 flex flex-col">
-                        <label class="block text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-3">Lingua del prompt</label>
-                        <select id="select-lang" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-xs text-gray-200 outline-none focus:border-cyan-500 transition-all">
+                        <label class="fld mb-3">Lingua del prompt</label>
+                        <select id="select-lang" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-xs text-gray-200 outline-none focus:border-blue-500 transition-all">
                             <option value="en">Inglese (massima precisione tecnica)</option>
                             <option value="it">Italiano (i modelli 2026 lo reggono bene)</option>
                         </select>
-                        <p class="text-[10px] text-gray-500 mt-3 leading-relaxed">
+                        <p class="note mt-3">
                             Il lessico fotografico (focali, emulsioni, schemi di luce) resta comunque in inglese:
                             è la lingua in cui i modelli lo hanno imparato.
                         </p>
@@ -426,10 +456,10 @@
                 <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800 mb-12">
                     <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
                         <div>
-                            <label class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">I tuoi assetti</label>
-                            <p class="text-[10px] text-gray-500 mt-1">Maestro, ottica, luce, pellicola, formato e motore. Il soggetto resta fuori: l'assetto è un modo di guardare, non uno scatto.</p>
+                            <label class="fld">I tuoi assetti</label>
+                            <p class="note mt-1">Maestro, ottica, luce, pellicola, formato e motore. Il soggetto resta fuori: l'assetto è un modo di guardare, non uno scatto.</p>
                         </div>
-                        <button onclick="saveRig()" class="text-[11px] font-bold uppercase tracking-wider text-emerald-300 hover:text-white border border-emerald-500/40 hover:border-emerald-400 hover:bg-emerald-500/10 rounded-lg px-4 py-2.5 transition-colors shrink-0">
+                        <button onclick="saveRig()" class="text-[11px] font-bold uppercase tracking-wider text-blue-300 hover:text-white border border-blue-500/40 hover:border-blue-400 hover:bg-blue-500/10 rounded-lg px-4 py-2.5 transition-colors shrink-0">
                             Salva assetto attuale
                         </button>
                     </div>
@@ -444,7 +474,7 @@
                         <!-- 1. Visualizer & Format -->
                         <div class="bg-gray-900/50 p-6 rounded-2xl border border-gray-800">
                             <div class="flex justify-between items-center mb-4">
-                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Inquadratura</label>
+                                <label class="fld">Inquadratura</label>
                                 <span id="ar-label" class="text-xs font-mono text-cyan-400">3:2</span>
                             </div>
                             <div class="flex gap-6 items-center">
@@ -455,14 +485,14 @@
                                     <div id="ratio-preview-box" class="bg-gray-700 border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)]" style="width: 48px; height: 32px;"></div>
                                 </div>
                             </div>
-                            <p id="ar-note" class="text-[10px] text-gray-500 mt-4 leading-relaxed"></p>
+                            <p id="ar-note" class="note mt-4"></p>
                         </div>
 
                         <!-- 2. Subject & Context (Italiano) -->
                         <div class="space-y-5">
                             <div class="relative">
                                 <div class="flex justify-between mb-1.5">
-                                    <label class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Soggetto</label>
+                                    <label class="fld">Soggetto</label>
                                     <button onclick="generateIdea()" class="text-[10px] text-blue-400 hover:text-white flex items-center gap-1 transition-colors -mt-1 -mr-1 px-2 py-1.5 rounded-md active:bg-white/10">
                                         <span id="idea-icon">&#10024;</span> Ispirami
                                     </button>
@@ -471,24 +501,24 @@
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1.5">Azione / Contesto</label>
+                                <label class="fld mb-1.5">Azione / Contesto</label>
                                 <input type="text" id="input-action" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3.5 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition-all text-sm" placeholder="Es. Al porto, nebbia...">
                             </div>
 
                             <!-- IMMAGINI DI RIFERIMENTO -->
                             <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
                                 <div class="flex justify-between items-center mb-3 gap-3">
-                                    <label class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Immagini di riferimento</label>
-                                    <button onclick="clearRefs()" id="ref-clear" class="text-[10px] text-gray-500 hover:text-red-400 px-2 py-1 rounded transition-colors hidden">Svuota</button>
+                                    <label class="fld">Immagini di riferimento</label>
+                                    <button onclick="clearRefs()" id="ref-clear" class="text-[11px] text-slate-400 hover:text-red-400 px-2 py-1 rounded transition-colors hidden">Svuota</button>
                                 </div>
 
                                 <!-- Zona di rilascio (motori che accettano allegati) -->
                                 <div id="ref-dropzone" class="hidden">
                                     <label for="ref-file-input" id="ref-drop-label"
-                                           class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-700 rounded-xl py-6 px-4 cursor-pointer hover:border-pink-500/60 hover:bg-white/[0.02] transition-colors text-center">
+                                           class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-700 rounded-xl py-6 px-4 cursor-pointer hover:border-blue-500/60 hover:bg-white/[0.02] transition-colors text-center">
                                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5V18a3 3 0 003 3h12a3 3 0 003-3v-1.5M12 3v13.5M12 3l-4 4M12 3l4 4"/></svg>
                                         <span class="text-xs text-gray-400">Trascina qui le immagini</span>
-                                        <span class="text-[10px] text-gray-600">oppure tocca per scegliere i file</span>
+                                        <span class="note">oppure tocca per scegliere i file</span>
                                     </label>
                                     <input type="file" id="ref-file-input" accept="image/*" multiple class="hidden">
                                 </div>
@@ -496,12 +526,12 @@
                                 <!-- Campi URL (solo Midjourney, che lavora con i link) -->
                                 <div id="ref-urls" class="hidden space-y-3">
                                     <div>
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">URL stile <span class="font-mono text-gray-600">--sref</span></label>
-                                        <input type="text" id="ref-url-sref" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-xs text-white outline-none placeholder-gray-600 focus:border-pink-500 transition-all" placeholder="https://...">
+                                        <label class="block fld mb-1.5">URL stile <span class="font-mono text-gray-600">--sref</span></label>
+                                        <input type="text" id="ref-url-sref" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-xs text-white outline-none placeholder-gray-600 focus:border-blue-500 transition-all" placeholder="https://...">
                                     </div>
                                     <div>
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">URL personaggio <span class="font-mono text-gray-600">--oref</span></label>
-                                        <input type="text" id="ref-url-oref" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-xs text-white outline-none placeholder-gray-600 focus:border-pink-500 transition-all" placeholder="https://...">
+                                        <label class="block fld mb-1.5">URL personaggio <span class="font-mono text-gray-600">--oref</span></label>
+                                        <input type="text" id="ref-url-oref" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-xs text-white outline-none placeholder-gray-600 focus:border-blue-500 transition-all" placeholder="https://...">
                                     </div>
                                 </div>
 
@@ -511,13 +541,13 @@
                                 <!-- Contatori -->
                                 <div id="ref-counters" class="flex flex-wrap gap-x-4 gap-y-1 mt-4"></div>
 
-                                <p id="ref-note" class="text-[10px] text-gray-500 mt-3 leading-relaxed"></p>
+                                <p id="ref-note" class="note mt-3"></p>
                             </div>
 
                             <!-- COMPOSITION / FRAMING -->
                             <div>
-                                <label class="block text-[10px] font-bold text-cyan-500 uppercase tracking-wider mb-1.5">Angolazione &amp; Distanza</label>
-                                <select id="select-framing" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3.5 text-xs text-gray-300 outline-none focus:border-cyan-500 transition-all">
+                                <label class="fld mb-1.5">Angolazione &amp; Distanza</label>
+                                <select id="select-framing" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3.5 text-xs text-gray-300 outline-none focus:border-blue-500 transition-all">
                                     <option value="">Default (Automatico in base allo stile)</option>
                                     <optgroup label="Angolazione">
                                         <option value="eye-level shot">Ad altezza occhi (Neutro)</option>
@@ -541,7 +571,7 @@
                         <div class="grid grid-cols-2 gap-5">
                             <!-- Camera -->
                             <div>
-                                <label class="block text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5">Ottica (Lens)</label>
+                                <label class="fld mb-1.5">Ottica (Lens)</label>
                                 <select id="select-camera" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
                                     <optgroup label="Reportage / Street">
                                         <option value="Leica M3 with 35mm lens">35mm (Grandangolo)</option>
@@ -564,7 +594,7 @@
 
                             <!-- Aperture Control -->
                             <div>
-                                <label class="block text-[10px] font-bold text-green-500 uppercase tracking-wider mb-1.5">Profondità (Apertura)</label>
+                                <label class="fld mb-1.5">Profondità (Apertura)</label>
                                 <select id="select-aperture" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
                                     <option value="">Default (Automatico)</option>
                                     <option value="f/1.4">f/1.4 - Bokeh Estremo</option>
@@ -577,7 +607,7 @@
 
                             <!-- Lighting -->
                             <div>
-                                <label class="block text-[10px] font-bold text-yellow-500 uppercase tracking-wider mb-1.5">Luce</label>
+                                <label class="fld mb-1.5">Luce</label>
                                 <select id="select-light" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
                                     <optgroup label="Luce Naturale (Orario)">
                                         <option value="Soft, diffused natural light">Diffusa / Nuvoloso</option>
@@ -602,7 +632,7 @@
 
                             <!-- Film Stock -->
                             <div>
-                                <label class="block text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1.5">Pellicola</label>
+                                <label class="fld mb-1.5">Pellicola</label>
                                 <select id="select-film" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-gray-400 outline-none focus:border-gray-500 transition-all">
                                     <option value="">Default (Auto)</option>
                                     <optgroup label="Colore">
@@ -628,22 +658,27 @@
 
                             <!-- Text Overlay -->
                             <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-orange-500 uppercase tracking-wider mb-1.5">Testo Visibile (Opzionale)</label>
+                                <label class="fld mb-1.5">Testo Visibile (Opzionale)</label>
                                 <input type="text" id="input-text" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white outline-none placeholder-gray-600 transition-all" placeholder="Es. Insegna 'HOTEL'...">
-                                <p class="text-[10px] text-gray-600 mt-1.5">I modelli 2026 scrivono testo leggibile: qui puoi finalmente fidarti.</p>
+                                <p class="note mt-1.5">I modelli 2026 scrivono testo leggibile: qui puoi finalmente fidarti.</p>
                             </div>
                         </div>
 
                     </div>
 
-                    <!-- OUTPUT COLUMN -->
-                    <div class="flex flex-col h-full">
-                        <div class="bg-white dark:bg-darkcard rounded-3xl p-1.5 flex-grow flex flex-col shadow-2xl relative overflow-hidden group border border-gray-100 dark:border-gray-700 transition-colors">
+                    <!-- OUTPUT COLUMN
+                         sticky: il pannello resta agganciato mentre scorri i
+                         controlli, così il prompt è sempre sotto gli occhi
+                         nel momento in cui lo stai modificando. E senza h-full
+                         non si stira più per pareggiare la colonna sinistra,
+                         che lasciava centinaia di pixel vuoti. -->
+                    <div class="flex flex-col lg:sticky lg:top-20 lg:self-start">
+                        <div class="bg-white dark:bg-darkcard rounded-3xl p-1.5 flex flex-col shadow-2xl relative overflow-hidden group border border-gray-100 dark:border-gray-700 transition-colors">
                             <!-- Output Header -->
                             <div class="bg-gray-50 dark:bg-gray-800/80 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center rounded-t-2xl gap-3">
                                 <div class="flex items-center gap-2.5 min-w-0">
                                     <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)] shrink-0"></div>
-                                    <span id="output-title" class="text-[11px] sm:text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wide leading-tight">Prompt Generato</span>
+                                    <span id="output-title" class="fld fld-t leading-tight">Prompt Generato</span>
                                 </div>
                                 <button onclick="optimizePrompt()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-lg shadow-indigo-900/20 btn-hover shrink-0">
                                     <span id="opt-icon">&#9889;</span> <span id="opt-text">Ottimizza</span>
@@ -654,20 +689,20 @@
                             <!-- max-h: senza tetto la textarea si stira all'altezza
                                  della colonna dei controlli, lasciando centinaia di
                                  pixel vuoti sotto il testo. -->
-                            <textarea id="prompt-output" spellcheck="false" class="w-full flex-grow min-h-[280px] max-h-[460px] p-6 text-gray-800 dark:text-gray-200 bg-white dark:bg-darkcard font-mono text-sm leading-relaxed resize-y outline-none transition-colors rounded-b-2xl"></textarea>
+                            <textarea id="prompt-output" spellcheck="false" class="w-full flex-grow min-h-[280px] max-h-[min(460px,46vh)] p-6 text-gray-800 dark:text-gray-200 bg-white dark:bg-darkcard font-mono text-sm leading-relaxed resize-y outline-none transition-colors rounded-b-2xl"></textarea>
 
                             <!-- Footer -->
                             <div class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700 p-4">
                                 <div class="flex items-center justify-between gap-3 mb-2">
                                     <div id="negative-toggle-wrap" class="flex items-center gap-2.5">
                                         <input type="checkbox" id="merge-negative" onchange="buildPrompt()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
-                                        <label for="merge-negative" class="text-[10px] font-bold text-red-500 uppercase cursor-pointer select-none">Includi --no (Midjourney)</label>
+                                        <label for="merge-negative" class="fld cursor-pointer select-none">Includi --no (Midjourney)</label>
                                     </div>
                                     <button onclick="copyPrompt()" class="ml-auto bg-black hover:bg-gray-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2 btn-hover shrink-0">
                                         <span id="copy-label">Copia Tutto</span>
                                     </button>
                                 </div>
-                                <p id="output-hint" class="text-[10px] text-gray-400 dark:text-gray-500 leading-relaxed">
+                                <p id="output-hint" class="note-t leading-relaxed">
                                     ...
                                 </p>
                             </div>
@@ -676,7 +711,7 @@
                         <!-- History & Actions -->
                         <div class="mt-6 flex justify-between items-center">
                             <div class="flex-grow overflow-hidden mr-4">
-                                <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Recenti</h4>
+                                <h4 class="fld mb-2">Recenti</h4>
                                 <div id="history-list" class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                                     <!-- History items -->
                                 </div>
@@ -1345,17 +1380,17 @@
             const el = document.getElementById('attr-note');
             const living = selectedMaster && selectedMaster.living;
             if (selectedAttribution === 'tech') {
-                el.className = 'text-[10px] text-gray-500 mt-3 leading-relaxed';
+                el.className = 'note mt-3';
                 el.textContent = "Solo i parametri tecnici. Nessun rischio di rifiuto, ma perdi la personalità dell'autore.";
             } else if (selectedAttribution === 'grammar') {
-                el.className = 'text-[10px] text-gray-500 mt-3 leading-relaxed';
+                el.className = 'note mt-3';
                 el.textContent = "Il nome resta fuori, ma il DNA del maestro viene scritto per esteso. È l'opzione più controllabile: se il risultato non convince, sai quale parametro toccare.";
             } else {
                 if (living && selectedEngine === 'chatgpt') {
                     el.className = 'text-[10px] text-amber-400 mt-3 leading-relaxed';
                     el.textContent = "⚠ " + selectedMaster.name + " è vivente: ChatGPT rifiuta per policy i riferimenti allo stile di artisti viventi. Su Gemini e Midjourney di norma passa.";
                 } else {
-                    el.className = 'text-[10px] text-gray-500 mt-3 leading-relaxed';
+                    el.className = 'note mt-3';
                     el.textContent = "Il nome del maestro entra nel prompt. Efficace, ma delega tutto al modello: hai meno controllo fine.";
                 }
             }
@@ -1486,7 +1521,7 @@
             box.innerHTML = '';
 
             if (!list.length) {
-                box.innerHTML = '<p class="text-[10px] text-gray-600">Nessun assetto salvato. Calibra i parametri come vuoi, poi premi «Salva assetto attuale».</p>';
+                box.innerHTML = '<p class="note">Nessun assetto salvato. Calibra i parametri come vuoi, poi premi «Salva assetto attuale».</p>';
                 return;
             }
 
@@ -1517,12 +1552,12 @@
             const now = JSON.stringify(currentRig());
             document.querySelectorAll('.rig-chip').forEach(chip => {
                 const active = chip.dataset.rig === now;
-                chip.classList.toggle('border-emerald-400', active);
-                chip.classList.toggle('bg-emerald-500/10', active);
+                chip.classList.toggle('border-blue-400', active);
+                chip.classList.toggle('bg-blue-500/10', active);
                 chip.classList.toggle('border-gray-700', !active);
                 chip.classList.toggle('hover:border-gray-500', !active);
                 const n = chip.querySelector('.rig-name');
-                n.classList.toggle('text-emerald-300', active);
+                n.classList.toggle('text-blue-300', active);
                 n.classList.toggle('font-bold', active);
                 n.classList.toggle('text-gray-300', !active);
             });
@@ -1569,7 +1604,7 @@
                     '<div class="min-w-0">' +
                         '<p class="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">' + escapeHtml(eng.label) +
                             (current ? ' <span class="text-indigo-500 font-normal">· attivo</span>' : '') + '</p>' +
-                        '<p class="text-[10px] text-gray-400 mt-0.5">' +
+                        '<p class="text-[11px] text-slate-400 mt-0.5">' +
                             (eng.style === 'keywords' ? 'keyword + flag' : eng.style === 'prose-compact' ? 'prosa condensata' : 'prosa estesa') +
                             ' · ' + words + ' parole · ' + ar + '</p>' +
                     '</div>';
@@ -1706,12 +1741,12 @@
                 card.className = 'relative bg-gray-800 rounded-xl overflow-hidden border border-gray-700 group';
                 card.innerHTML =
                     '<img src="' + r.thumb + '" alt="' + escapeAttr(r.name) + '" class="w-full h-20 object-cover">' +
-                    '<select class="w-full bg-gray-900 text-[10px] text-gray-300 px-2 py-1.5 outline-none border-t border-gray-700">' +
+                    '<select class="w-full bg-gray-900 text-[11px] text-slate-300 px-2 py-1.5 outline-none border-t border-gray-700">' +
                         Object.entries(REF_ROLES).map(([v, l]) =>
                             '<option value="' + v + '"' + (r.role === v ? ' selected' : '') + '>' + l + '</option>').join('') +
                     '</select>' +
                     '<button aria-label="Rimuovi" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white text-sm leading-none hover:bg-red-600 transition-colors">&times;</button>' +
-                    '<span class="block px-2 py-1 text-[9px] text-gray-500 truncate" title="' + escapeAttr(r.name) + '">' + escapeHtml(r.name) + '</span>';
+                    '<span class="block px-2 py-1 text-[10px] text-slate-400 truncate" title="' + escapeAttr(r.name) + '">' + escapeHtml(r.name) + '</span>';
                 card.querySelector('select').onchange = e => setRefRole(r.id, e.target.value);
                 card.querySelector('button').onclick = () => removeRef(r.id);
                 list.appendChild(card);
@@ -1725,14 +1760,14 @@
                 if (!n && !cap) return;
                 const over = cap != null && n > cap;
                 const s = document.createElement('span');
-                s.className = 'text-[10px] font-medium ' + (over ? 'text-red-400' : n ? 'text-gray-300' : 'text-gray-600');
+                s.className = 'text-[11px] font-medium ' + (over ? 'text-red-400' : n ? 'text-slate-300' : 'text-slate-500');
                 s.textContent = label + ' ' + n + (cap != null ? '/' + cap : '');
                 counters.appendChild(s);
             });
             if (limits.total) {
                 const tot = refImages.length, over = tot > limits.total;
                 const s = document.createElement('span');
-                s.className = 'text-[10px] font-bold ' + (over ? 'text-red-400' : 'text-gray-500');
+                s.className = 'text-[11px] font-bold ' + (over ? 'text-red-400' : 'text-slate-400');
                 s.textContent = 'Totale ' + tot + '/' + limits.total;
                 counters.appendChild(s);
             }
@@ -1741,7 +1776,7 @@
                 .map(([k]) => REF_ROLES[k].toLowerCase());
             if (problems.length || (limits.total && refImages.length > limits.total)) {
                 const w = document.createElement('span');
-                w.className = 'text-[10px] text-red-400 basis-full';
+                w.className = 'text-[11px] text-red-400 basis-full';
                 w.textContent = 'Oltre il limite di ' + engines[selectedEngine].label +
                     ': le immagini in eccesso verranno ignorate dal modello.';
                 counters.appendChild(w);
@@ -2299,7 +2334,7 @@
             c.innerHTML = '';
             h.forEach(t => {
                 const d = document.createElement('div');
-                d.className = 'flex-shrink-0 w-48 bg-white dark:bg-gray-800 p-2.5 rounded-lg text-[10px] text-gray-600 dark:text-gray-300 truncate cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors shadow-sm';
+                d.className = 'flex-shrink-0 w-48 bg-white dark:bg-gray-800 p-2.5 rounded-lg note dark:text-gray-300 truncate cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors shadow-sm';
                 d.innerText = t;
                 d.title = t;
                 d.onclick = () => { document.getElementById('prompt-output').value = t; };
