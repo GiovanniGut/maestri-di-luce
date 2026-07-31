@@ -1905,6 +1905,19 @@
         function initChartDrag(canvas) {
             let dragging = false, axis = -1;
 
+            /* Vicino al centro l'angolo non identifica nessun asse: lo decidono
+               due pixel di rumore. Sotto questa distanza l'asse resta indeciso e
+               viene fissato appena il dito si allontana abbastanza — cioè in base
+               alla direzione in cui trascini, non al punto da cui parti. Senza
+               questo, i vertici che valgono 0 (e quindi stanno sul centro) si
+               agganciavano a un asse a caso e sembravano immobili. */
+            const deadZone = () => Math.max(14, currentChart.scales.r.drawingArea * 0.18);
+
+            const distance = (x, y) => {
+                const r = currentChart.scales.r;
+                return Math.hypot(x - r.xCenter, y - r.yCenter);
+            };
+
             const axisAt = (x, y) => {
                 const r = currentChart.scales.r;
                 const px = x - r.xCenter, py = y - r.yCenter;
@@ -1933,7 +1946,7 @@
             };
 
             const apply = (x, y) => {
-                if (!selectedMaster) return;
+                if (!selectedMaster || axis < 0) return;
                 if (!styleOverride) styleOverride = selectedMaster.stats.slice();
                 styleOverride[axis] = valueAt(x, y);
                 // se torna identico al maestro, l'assetto non è più "modificato"
@@ -1945,15 +1958,21 @@
             canvas.addEventListener('pointerdown', e => {
                 if (!selectedMaster) return;
                 const [x, y] = pos(e);
-                dragging = true; axis = axisAt(x, y);
+                dragging = true;
+                axis = distance(x, y) >= deadZone() ? axisAt(x, y) : -1;
                 canvas.classList.add('dragging');
-                canvas.setPointerCapture(e.pointerId);
+                if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
                 apply(x, y);
             });
             canvas.addEventListener('pointermove', e => {
                 if (!dragging) return;
                 e.preventDefault();
                 const [x, y] = pos(e);
+                // asse ancora indeciso: lo fissa la direzione del trascinamento
+                if (axis < 0) {
+                    if (distance(x, y) < deadZone()) return;
+                    axis = axisAt(x, y);
+                }
                 apply(x, y);
             });
             ['pointerup', 'pointercancel'].forEach(ev => canvas.addEventListener(ev, () => {
